@@ -1,0 +1,17 @@
+{
+  "name": "testIo",
+  "version": "0.0.0",
+  "description": "testing raspberry pi io",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "async": "^1.5.2",
+    "express": "^4.13.3",
+    "lodash": "^4.0.0",
+    "wiring-pi": "^2.1.1"
+  }
+}
