@@ -12,6 +12,7 @@
     "async": "^1.5.2",
     "express": "^4.13.3",
     "lodash": "^4.0.0",
+    "mongoose": "^4.3.6",
     "wiring-pi": "^2.1.1"
   }
 }
