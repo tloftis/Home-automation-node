@@ -11,8 +11,8 @@ var db = mongoose.connect('mongodb://localhost/plane-game-dev', function(err) {
 
 var app = require('express')(db);
 
-require('models/pin-model');
-require('routes/outlet-routes')(app);
+require('./models/pin-model');
+require('./routes/outlet-routes')(app);
 
 app.listen(2000, function(){
 	console.log('Server up and running!');

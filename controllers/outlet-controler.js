@@ -11,13 +11,13 @@ pins.push({
 	name: 'Top Outlet',
 	location: 'Downstairs, living room, south wall',
 	pin: 2,
-	inputPin, 17,
+	inputPin: 17,
 	val: 0
 },{
 	name: 'Bottom Outlet',
 	location: 'Downstairs, living room, south wall',
 	pin: 3,
-	inputPin, 4,
+	inputPin: 4,
 	val: 0
 });
 
@@ -63,7 +63,7 @@ var inputInterval = setInterval(function(){
 	
 	//The key is the pin number
 	for(key in monitoredPins){
-		monitoredPins[key].inter(g.digitalRead(key);
+		monitoredPins[key].inter(g.digitalRead(key));
 	}
 }, 10);
 
@@ -121,10 +121,10 @@ exports.set = function(req, res){
 		pinConfig = getConfig(pin);
 
 		if(pinConfig){
-			if(_.isNumber(var) || _.isBoolean(val)){
+			if(_.isNumber(val) || _.isBoolean(val)){
 				if(val < 0){ val = 0 };
 				if(val > 1){ val = 1 };
-				set(pin, +var);
+				set(pin, +val);
 			}else{
 				toggle(pin);
 			}
