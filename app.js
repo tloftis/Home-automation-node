@@ -1,15 +1,12 @@
 'use strict';
 
-var mongoose = require('mongoose');
+var app = require('express')();
+var bodyParser = require('body-parser')
 
-var db = mongoose.connect('mongodb://localhost/plane-game-dev', function(err) {
-	if (err) {
-		console.error('\x1b[31m', 'Could not connect to MongoDB!');
-		console.log(err);
-	}
-});
-
-var app = require('express')(db);
+app.use(bodyParser.json());       // to support JSON-encoded bodies
+app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
+	extended: true
+})); 
 
 require('./models/pin-model');
 require('./routes/outlet-routes')(app);

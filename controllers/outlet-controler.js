@@ -2,8 +2,9 @@
 
 var g = require('wiring-pi');
 var _ = require('lodash');
+var monitoredPins = {};//Holds callbacks for when pins change state
 
-setup('gpio');
+g.setup('gpio');
 
 var pins = [];
 
@@ -22,8 +23,8 @@ pins.push({
 });
 
 pins.forEach(function(pin){
-	g.pinMode(pin.pin, g.OUTPUT);
-	set(pin.pin, pin.val);
+	g.pinMode(+pin.pin, g.OUTPUT);
+	set(pin, pin.val);
 
 	//This sets up the physical button input
 	if(pin.inputPin){
@@ -42,20 +43,22 @@ function getConfig(pinNum){
 
 	for(i=0; i<pinLen; i++){
 		pin = pins[i];
-		if(pin.pin === pinNum) return pin;	
+		
+		if(+pin.pin == +pinNum){
+			return pin;
+		}	
 	}
 }
 
 function set(pin, newVal){
-	pin.pin = newVal;
-	g.digitalWrite(pin.pin, newVal);
+	console.log(pin);
+	pin.val = newVal;
+	g.digitalWrite(+pin.pin, +newVal);
 };
 
 function toggle(pin){
 	set(pin, +!pin.val);
 };
-
-var monitoredPins = [];//Holds callbacks for when pins change state
 
 //This monitores the pins held by the monitoredPins array checking them every 10 ms
 var inputInterval = setInterval(function(){
@@ -63,7 +66,7 @@ var inputInterval = setInterval(function(){
 	
 	//The key is the pin number
 	for(key in monitoredPins){
-		monitoredPins[key].inter(g.digitalRead(key));
+		monitoredPins[key].inter(g.digitalRead(+key));
 	}
 }, 10);
 
@@ -113,24 +116,19 @@ function digChange(pinNum, funct){
 }
 
 exports.set = function(req, res){
-	var pin = req.query.pin;
-	var val = req.query.val;
-	var pinConfig;
-	
-	if(_.isNumber(pin)){
-		pinConfig = getConfig(pin);
+	var pinConfig = getConfig(req.body.pin);
+	var val = req.body.val;
 
-		if(pinConfig){
-			if(_.isNumber(val) || _.isBoolean(val)){
-				if(val < 0){ val = 0 };
-				if(val > 1){ val = 1 };
-				set(pin, +val);
-			}else{
-				toggle(pin);
-			}
-	
-			return res.send(pinConfig);	
+	if(pinConfig){
+		if(_.isNumber(val) || _.isBoolean(val)){
+			if(val < 0){ val = 0 };
+			if(val > 1){ val = 1 };
+			set(pinConfig, +val);
+		}else{
+			toggle(pinConfig);
 		}
+	
+		return res.send(pinConfig);	
 	}
 	
 	res.status(400).send('Missing or incorrect pin');
