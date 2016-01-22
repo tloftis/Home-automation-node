@@ -1,0 +1,16 @@
+[
+  {
+    "name": "Top Outlet",
+    "location": "Downstairs, living room, south wall",
+    "pin": 2,
+    "inputPin": 17,
+    "val": 1
+  },
+  {
+    "name": "Bottom Outlet",
+    "location": "Downstairs, living room, south wall",
+    "pin": 3,
+    "inputPin": 4,
+    "val": 0
+  }
+]

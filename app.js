@@ -8,7 +8,6 @@ app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
 	extended: true
 })); 
 
-require('./models/pin-model');
 require('./routes/outlet-routes')(app);
 
 app.listen(2000, function(){
