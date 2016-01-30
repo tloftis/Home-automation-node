@@ -6,28 +6,15 @@ var monitoredPins = {};//Holds callbacks for when pins change state
 
 g.setup('gpio');
 
-var pins = [];
-
-pins.push({
-	name: 'Top Outlet',
-	location: 'Downstairs, living room, south wall',
-	pin: 2,
-	inputPin: 17,
-	val: 0
-},{
-	name: 'Bottom Outlet',
-	location: 'Downstairs, living room, south wall',
-	pin: 3,
-	inputPin: 4,
-	val: 0
-});
+var pins = require('../config.json');
+if(!_.isArray(pins)) throw new Error('Configuration file is inncorrect');
 
 pins.forEach(function(pin){
 	g.pinMode(+pin.pin, g.OUTPUT);
 	set(pin, pin.val);
 
 	//This sets up the physical button input
-	if(pin.inputPin){
+	if(!_.isUndefined(pin.inputPin)){
 		digChange(pin.inputPin, function(val){
 			if(!val){
 				toggle(pin);
@@ -51,7 +38,6 @@ function getConfig(pinNum){
 }
 
 function set(pin, newVal){
-	console.log(pin);
 	pin.val = newVal;
 	g.digitalWrite(+pin.pin, +newVal);
 };
@@ -88,10 +74,11 @@ function digChange(pinNum, funct){
 
 		monitoredPins[pin].inter = function(now){
 			if(now !== past){
-				for(var i = 0; i < monitoredPins[pin].functs.lengh; i++){
+				for(var i = 0; i < monitoredPins[pin].functs.length; i++){
 					monitoredPins[pin].functs[i](now);
-					past = now;
 				}
+				
+				past = now;
 			}
 		};
 		
