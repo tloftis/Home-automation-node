@@ -17,6 +17,8 @@ var outputs = require(outputConfigLoc),
     i = 0,
     serverIp;
 
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
 for (var j in interfaces) {
     for (i in interfaces[j]) {
         var address = interfaces[j][i];
@@ -144,7 +146,8 @@ exports.alertInputChange = function(pinConfig, resend){
     var info = {
         url: 'https://' + serverIp + '/api/node/input/update',
         form: { config: pinConfig },
-        timeout: 5000
+        timeout: 5000,
+        rejectUnhauthorized : false
     };
 
     request.post(info, function(err, resp, body){
