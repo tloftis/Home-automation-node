@@ -1,0 +1,6 @@
+{
+    id: '',
+    isOutput: false,
+    isInput: false,
+    isRfid: false
+}
