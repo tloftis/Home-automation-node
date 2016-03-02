@@ -43,7 +43,9 @@ exports.set = function(req, res){
 	var val = req.body.val;
 
 	if(pinConfig){
-		if(_.isNumber(val) || _.isBoolean(val)){
+		if(!_.isUndefined(val)){
+            val = +val;
+
 			if(val < 0){ val = 0 }
 			if(val > 1){ val = 1 }
 
