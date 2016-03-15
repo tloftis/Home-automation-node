@@ -11,6 +11,7 @@
   "dependencies": {
     "async": "^1.5.2",
     "body-parser": "^1.14.2",
+    "chalk": "^1.1.1",
     "express": "^4.13.3",
     "lodash": "^4.0.0",
     "request": "^2.69.0",

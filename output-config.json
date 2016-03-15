@@ -2,6 +2,7 @@
   {
     "name": "Living Room Light",
     "location": "Downstairs, living room, ceiling",
+    "description": "test descriptor",
     "pin": 2,
     "val": 1
   }

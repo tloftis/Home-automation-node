@@ -1,5 +1,6 @@
 {
     "isOutput": true,
     "isInput": true,
-    "isRfid": false
+    "isRfid": false,
+    "name": "Node on the table"
 }

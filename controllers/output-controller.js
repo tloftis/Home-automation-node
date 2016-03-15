@@ -71,29 +71,38 @@ exports.updateOutput = function(req, res){
 
     if(config.updateOutput(oldOutput, newOutput)){
         setupOutputs();
-        return res.send(oldOutput);
+        return res.send(oldOutput); //should be updated
     }
 
     return res.send("Error updating output.");
 };
 
 exports.addNewOutput = function(req, res){
-    var newOutput = req.body.output;
+    var output = req.body.output,
+        newOutput = {};
 
-    if(newOutput && newOutput.pin){
-        if(!newOutput.location){
-            newOutput.location = '';
+    if(output && output.pin){
+        newOutput.pin = output.pin;
+
+        if(output.name){
+            newOutput.name = output.name;
         }
-        if(!newOutput.description){
-            newOutput.description = '';
+
+        if(output.location){
+            newOutput.location = output.location;
         }
-        if(!newOutput.name){
-            newOutput.name = '';
+
+        if(output.description){
+            newOutput.description = output.description;
+        }
+
+        if(output.val){
+            newOutput.val = output.val;
         }
 
         if (config.addOutput(newOutput)){
             setupOutputs();
-            return res.send("Successfully added new Output");
+            return res.send(newOutput);
         }
 
         return res.status(400).send("Pin already in use, cannot add output");

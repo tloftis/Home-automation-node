@@ -13,10 +13,16 @@ var outputs = require(outputConfigLoc),
     os = require('os'),
     _ = require('lodash'),
     request = require('request'),
+    chalk = require('chalk'),
     interfaces = os.networkInterfaces(),
     i = 0,
     serverIp;
 
+var error = function(str) { console.log(chalk.bold.red(str)); },
+    info = function(str) { console.log(chalk.blue.underline(str)); },
+    success = function(str) { console.log(chalk.green.bold(str)); };
+
+//lets unsecure communication through for server talk, probably not that safe
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 for (var j in interfaces) {
@@ -132,9 +138,20 @@ exports.getInputByLocation = function (location){
 //If a change occurs before the post request is sent, it is bounced to the end of the callback list
 //A clone is made of the object since the object keeps it's reference to the original object and would
 //update otherwise just resending the old data back over and over again until req responds or serverIp is undefined
+var callbackList = [];
 var busy = false;
+
 exports.alertInputChange = function(pinConfig, resend){
-    if(busy) return setTimeout(function(){ exports.alertInputChange(_.clone(pinConfig), true) }, 0);
+    if(busy){
+        var cPinConfig = _.clone(pinConfig);
+
+        callbackList.push(function(){
+            exports.alertInputChange(cPinConfig, true)
+        });
+
+        return;
+    }
+
     busy = true;
 
     if(!serverIp) {
@@ -144,19 +161,22 @@ exports.alertInputChange = function(pinConfig, resend){
     }
 
     var info = {
-        url: 'https://' + serverIp + '/api/node/input/update',
+        url: 'https://' + serverIp + '/api/node/' + exports.getId() + '/update',
         form: { config: pinConfig },
-        timeout: 5000,
+        timeout: 10000,
         rejectUnhauthorized : false
     };
 
     request.post(info, function(err, resp, body){
         if(err){
-            console.log('Error updating server ' + serverIp + '!');
-            serverIp = undefined;
+            error('Error updating server with input change of input ' + pinConfig.name + ', pin: ' + pinConfig.pin + '!');
         }
 
         busy = false;
+
+        if(callbackList.length){
+            return callbackList.splice(0,1)[0]();
+        }
     });
 };
 
@@ -174,9 +194,11 @@ exports.addInput = function(inputConfig){
     if(!foundInput && !exports.getOutputByPin(inputConfig.pin)) {
         inputs.push(inputConfig);
         writeConfig(inputConfigLoc, inputs);
+        success('Successfully add new input: ' + inputConfig.name + ', pin:' + inputConfig.pin);
         return true;
     }
 
+    error('Failed to add new input: ' + inputConfig.name + ', pin:' + inputConfig.pin);
     return false;
 };
 
@@ -185,9 +207,12 @@ exports.addOutput = function(outputConfig){
 
     if(!foundOutput && !exports.getInputByPin(outputConfig.pin)) {
         outputs.push(outputConfig);
+        writeConfig(outputConfigLoc, outputs);
+        success('Successfully add new output: ' + outputConfig.name + ', pin:' + outputConfig.pin);
         return true;
     }
 
+    error('Failed to add new output: ' + outputConfig.name + ', pin:' + outputConfig.pin);
     return false;
 };
 
@@ -197,14 +222,23 @@ exports.updateOutput = function(oldConfig, newConfig){
     if(newConfig.location){
         oldConfig.location = newConfig.location;
     }
+
     if(newConfig.name){
         oldConfig.name = newConfig.name;
     }
+
     if(newConfig.description){
         oldConfig.description = newConfig.description;
     }
 
+    if(newConfig.pin){
+        if(!exports.getOutputByPin(newConfig.pin) && !exports.getInputByPin(newConfig.pin)) {
+            oldConfig.pin = newConfig.pin;
+        }
+    }
+
     writeConfig(outputConfigLoc, outputs);
+    info('Updated output: ' + oldConfig.name + ', pin:' + oldConfig.pin);
 
     return true;
 };
@@ -215,9 +249,11 @@ exports.removeOutput = function(outputConfig){
     if(index != -1) {
         outputs.splice(index, 1);
         writeConfig(outputConfigLoc, outputs);
+        success('Successfully removed output: ' + outputConfig.name + ', pin:' + outputConfig.pin);
         return true;
     }
 
+    error('Failed to remove output: ' + outputConfig.name + ', pin:' + outputConfig.pin);
     return false;
 };
 
@@ -231,9 +267,16 @@ exports.updateInput = function(oldConfig, newConfig){
     if(newConfig.description){
         oldConfig.description = newConfig.description;
     }
+    if(newConfig.invVal){
+        oldConfig.invVal = newConfig.invVal;
+    }
+    if(newConfig.pin){
+        oldConfig.pin = newConfig.pin;
+    }
 
     writeConfig(inputConfigLoc, inputs);
 
+    info('Updated input: ' + oldConfig.name + ' pin:' + oldConfig.pin);
     return true;
 };
 
@@ -243,15 +286,18 @@ exports.removeInput = function(inputConfig){
     if(index != -1) {
         inputs.splice(index, 1);
         writeConfig(inputConfigLoc, inputs);
+        success('Successfully removed input: ' + inputConfig.name + ' pin:' + inputConfig.pin);
         return true;
     }
 
+    error('Failed to removed input: ' + inputConfig.name + ' pin:' + inputConfig.pin);
     return false;
 };
 
 exports.registerServer = function(req, res){
     serverIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
     serverIp =  serverIp.match(/\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b/g)[0];
+    info('Registered new server, IP:' + serverIp);
     return res.send('Registered IP ' + serverIp);
 };
 

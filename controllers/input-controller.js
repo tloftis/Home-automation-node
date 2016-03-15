@@ -1,8 +1,9 @@
 'use strict';
 
-var _ = require('lodash');
 var monitoredPins = {};//Holds callbacks for when pins change state
-var config = require('../config.js');
+var config = require('../config.js'),
+    _ = require('lodash'),
+    async = require('async');
 
 //This monitores the pins held by the monitoredPins array checking them every 10 ms
 var inputInterval = setInterval(function(){
@@ -17,7 +18,7 @@ var inputInterval = setInterval(function(){
 //Okay, I admit this may be a bit of a custer to look at, but it is very flexable
 //Specify the pin the input is on, and specify a callback that fires every time the input pin state changes, giving the current value as an arg	
 function digChange(pinConfig, funct){
-	var pin = pinConfig.pin; //this is here to make sure nothing gets changed out of scope, although that should only happen if it is an obj
+	var pin = +pinConfig.pin; //this is here to make sure nothing gets changed out of scope, although that should only happen if it is an obj
 
 	//If the pin is already being monitored then just add to the list of callbacks
 	if(monitoredPins[pin]){
@@ -27,11 +28,13 @@ function digChange(pinConfig, funct){
 		//a interval will come by and call inter giving the current state of the pin as input, that is compared with the past value
 		//If they don't match, then the state must have changed, call all calbacks, then update the past var to the new val
         config.gpio.pinMode(pin, config.gpio.INPUT);
-        pinConfig.val = config.gpio.digitalRead(pin);
+        pinConfig.val = +(+config.gpio.digitalRead(pin) === +!pinConfig.invVal);
 		monitoredPins[pin] = {};
 
         //just feed this function with the pins current state and it will fire and update if it had changed
 		monitoredPins[pin].inter = function(now){
+            now = +(+now === +!pinConfig.invVal); //this will inverse if invVal is true
+
 			if(now !== pinConfig.val){
 				for(var i = 0; i < monitoredPins[pin].functs.length; i++){
 					monitoredPins[pin].functs[i](now);
@@ -63,7 +66,9 @@ function digChange(pinConfig, funct){
 
 var listners = [];
 
-function setListeners(){
+function setListeners(callback){
+    if(!callback) callback = function () {};
+
     var inputs = config.getInputs(),
         i = 0;
 
@@ -76,11 +81,13 @@ function setListeners(){
     listners = [];
 
     //repopulate listners with new ones
-    for(i = 0; i < inputs.length; i++){
-        listners.push(digChange(inputs[i], function(now){
-            config.alertInputChange(inputs[i]);
+    async.each(inputs, function(input, next){
+        listners.push(digChange(input, function(now){
+            config.alertInputChange(input);
         }));
-    }
+
+        next();
+    }, callback);
 }
 
 setListeners();
@@ -110,10 +117,13 @@ exports.addNewInput = function(req, res){
         if(!newInput.name){
             newInput.name = '';
         }
+        if(!newInput.invVal){
+            newInput.invVal = false;
+        }
 
         if (config.addInput(newInput)){
             setListeners();
-            return res.send("Successfully added new Input");
+            return res.send(newInput);
         }
 
         return res.status(400).send("Pin already in use, cannot add input");
@@ -133,6 +143,7 @@ exports.updateInput = function(req, res){
 
     config.updateInput(oldInput, newInput);
     setListeners();
+
     return res.send(oldInput);
 };
 

@@ -9,10 +9,10 @@ module.exports = function(app) {
         .put(inputs.updateInputs)
         .post(inputs.addNewInput);
 
-	app.route('/api/input/:outputPin').
+	app.route('/api/input/:inputPin').
 		put(inputs.updateInput).
 		delete(inputs.removeInput);
 
 	// Finish by binding the user middleware
-	app.param('outputPin', inputs.getInputByPin);
+	app.param('inputPin', inputs.getInputByPin);
 };
