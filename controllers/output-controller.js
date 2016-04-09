@@ -1,7 +1,6 @@
 'use strict';
 
 var _ = require('lodash'),
-	monitoredPins = {},//Holds callbacks for when pins change state
     config = require('../config.js');
 
 function setupOutputs(){

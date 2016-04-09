@@ -7,7 +7,7 @@ var inputConfigLoc = './input-config.json',
 
 var outputs = require(outputConfigLoc),
     inputs = require(inputConfigLoc),
-    nodeId = require(idConfigLoc),
+    node = require(idConfigLoc),
     g = require('wiring-pi'),
     fs = require('fs'),
     os = require('os'),
@@ -15,11 +15,39 @@ var outputs = require(outputConfigLoc),
     request = require('request'),
     chalk = require('chalk'),
     interfaces = os.networkInterfaces(),
-    i = 0,
-    serverIp;
+    pinCount = (node.pinCount ? node.pinCount : 26),
+    registeredPins = {},
+    outputDriverLocs = [
+        "./drivers/outputs/relay/index.js"
+    ],
+    inputDriversLocs = [];
+
+var driverConfig;
+
+var outputDrivers = [],
+    inputDrivers = [],
+    driverId = 1;
+
+for(var i = 1; i <= pinCount; i++){
+    registeredPins[i] = false;
+}
+
+for(var i = 0; i <= outputDriverLocs.length; i++){
+    outputDrivers.push({
+        driver: require(outputDriverLocs[i]),
+        id: driverId++
+    });
+}
+
+for(var i = 0; i <= inputDriversLocs.length; i++){
+    inputDrivers.push({
+        driver: require(inputDriverLocs[i]),
+        id: driverId++
+    });
+}
 
 var error = function(str) { console.log(chalk.bold.red(str)); },
-    info = function(str) { console.log(chalk.blue.underline(str)); },
+    info = function(str) { console.log(chalk.blue.bold.underline(str)); },
     success = function(str) { console.log(chalk.green.bold(str)); };
 
 //lets unsecure communication through for server talk, probably not that safe
@@ -30,7 +58,7 @@ for (var j in interfaces) {
         var address = interfaces[j][i];
 
         if (address.family === 'IPv4' && !address.internal) {
-            nodeId.id = address.mac;
+            node.id = address.mac;
         }
     }
 }
@@ -50,7 +78,17 @@ function writeConfig(fileLoc, obj, callback){
 exports.gpio = g;
 
 exports.getId = function(){
-    return nodeId.id;
+    return node.id;
+};
+
+exports.registerPin = function(pin){
+    pin = +pin;
+
+    if(!registeredPins[pin]){
+        return registeredPins[pin] = true;
+    }
+
+    return false;
 };
 
 exports.getOutputs = function (){
@@ -60,7 +98,7 @@ exports.getOutputs = function (){
 exports.getOutputByName = function (name){
     var output = false;
 
-    for(i = 0; i < outputs.length; i++){
+    for(var i = 0; i < outputs.length; i++){
         if(outputs[i].name === name){
             output = outputs[i];
         }
@@ -73,7 +111,7 @@ exports.getOutputByPin = function (pin){
     var output = false;
     pin = +pin;
 
-    for(i = 0; i < outputs.length; i++){
+    for(var i = 0; i < outputs.length; i++){
         if(+outputs[i].pin === pin){
             output = outputs[i];
         }
@@ -85,7 +123,7 @@ exports.getOutputByPin = function (pin){
 exports.getOutputByLocation = function (location){
     var output = false;
 
-    for(i = 0; i < outputs.length; i++){
+    for(var i = 0; i < outputs.length; i++){
         if(outputs[i].location === location){
             output = outputs[i];
         }
@@ -101,7 +139,7 @@ exports.getInputs = function (){
 exports.getInputByName = function (name){
     var input = false;
 
-    for(i = 0; i < inputs.length; i++){
+    for(var i = 0; i < inputs.length; i++){
         if(inputs[i].name === name){
             input = inputs[i];
         }
@@ -114,7 +152,7 @@ exports.getInputByPin = function (pin){
     var input = false;
     pin = +pin;
 
-    for(i = 0; i < inputs.length; i++){
+    for(var i = 0; i < inputs.length; i++){
         if(+inputs[i].pin === pin){
             input = inputs[i];
         }
@@ -126,7 +164,7 @@ exports.getInputByPin = function (pin){
 exports.getInputByLocation = function (location){
     var input = false;
 
-    for(i = 0; i < inputs.length; i++){
+    for(var i = 0; i < inputs.length; i++){
         if(inputs[i].location === location){
             input = inputs[i];
         }
@@ -137,7 +175,7 @@ exports.getInputByLocation = function (location){
 
 //If a change occurs before the post request is sent, it is bounced to the end of the callback list
 //A clone is made of the object since the object keeps it's reference to the original object and would
-//update otherwise just resending the old data back over and over again until req responds or serverIp is undefined
+//update otherwise just resending the old data back over and over again until req responds or node.server is undefined
 var callbackList = [];
 var busy = false;
 
@@ -154,14 +192,14 @@ exports.alertInputChange = function(pinConfig, resend){
 
     busy = true;
 
-    if(!serverIp) {
+    if(!node.server) {
         if(!resend) console.log('No server currently registered');
         busy = false;
         return;
     }
 
     var info = {
-        url: 'https://' + serverIp + '/api/node/' + exports.getId() + '/update',
+        url: 'https://' + node.server + '/api/node/' + exports.getId() + '/update',
         form: { config: pinConfig },
         timeout: 10000,
         rejectUnhauthorized : false
@@ -181,11 +219,11 @@ exports.alertInputChange = function(pinConfig, resend){
 };
 
 exports.getServer = function(){
-    return serverIp;
+    return node.server;
 };
 
 exports.setServer = function(ip){
-    return serverIp = ip;
+    return node.server = ip;
 };
 
 exports.addInput = function(inputConfig){
@@ -276,7 +314,7 @@ exports.updateInput = function(oldConfig, newConfig){
 
     writeConfig(inputConfigLoc, inputs);
 
-    info('Updated input: ' + oldConfig.name + ' pin:' + oldConfig.pin);
+    info('Updated input: ' + oldConfig.name + ', pin:' + oldConfig.pin);
     return true;
 };
 
@@ -286,31 +324,49 @@ exports.removeInput = function(inputConfig){
     if(index != -1) {
         inputs.splice(index, 1);
         writeConfig(inputConfigLoc, inputs);
-        success('Successfully removed input: ' + inputConfig.name + ' pin:' + inputConfig.pin);
+        success('Successfully removed input: ' + inputConfig.name + ', pin:' + inputConfig.pin);
         return true;
     }
 
-    error('Failed to removed input: ' + inputConfig.name + ' pin:' + inputConfig.pin);
+    error('Failed to removed input: ' + inputConfig.name + ', pin:' + inputConfig.pin);
     return false;
 };
 
-exports.registerServer = function(req, res){
-    serverIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-    serverIp =  serverIp.match(/\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b/g)[0];
-    info('Registered new server, IP:' + serverIp);
-    return res.send('Registered IP ' + serverIp);
+var updateNode = function(newConfig){
+    if(newConfig.name){
+        node.name = newConfig.name;
+    }
+
+    if(newConfig.description){
+        node.description = newConfig.description;
+    }
+
+    if(newConfig.location){
+        node.location = newConfig.location;
+    }
+
+    writeConfig(idConfigLoc, node);
+
+    info('Updated node config: ' + node.name + ', location:' + node.location);
+    return true;
 };
 
-exports.registerServerRest = function(req, res){
-    var regInfo = {
-        serverIp: serverIp,
-        id: nodeId.id,
-        isOutput: nodeId.isOutput,
-        isInput: nodeId.isInput,
-        isRfid: nodeId.isRfid
-    };
+exports.registerServer = function(req, res){
+    node.server = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    node.server =  node.server.match(/\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b/g)[0];
+    info('Registered new server, IP:' + node.server);
+    writeConfig(idConfigLoc, node);
+    return res.send('Registered IP ' + node.server);
+};
 
-    return res.send(regInfo);
+exports.configServer = function(req, res){
+    var newNode = req.body.node;
+    updateNode(newNode, node);
+    return res.send(node);
+};
+
+exports.serverInfo = function(req, res){
+    return res.send(node);
 };
 
 return exports;

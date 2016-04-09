@@ -1,6 +1,6 @@
 {
-    "isOutput": true,
-    "isInput": true,
-    "isRfid": false,
-    "name": "Node on the table"
+    "name": "Living Room Switch",
+    "location": "Downstairs, living room, south wall",
+    "description": "Node on the table",
+    "pinCount": 40
 }
