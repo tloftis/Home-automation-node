@@ -9,7 +9,7 @@ module.exports = function(app) {
         .put(outputs.updateOutputs)
         .post(outputs.addNewOutput);
 
-    app.route('/api/output/:outputPin').
+    app.route('/api/output/:outputId').
         put(outputs.updateOutput).
         delete(outputs.removeOutput);
 
@@ -17,5 +17,5 @@ module.exports = function(app) {
         .post(outputs.set);
 
     // Finish by binding the user middleware
-    app.param('outputPin', outputs.getOutputByPin);
+    app.param('outputId', outputs.getOutputByPin);
 };

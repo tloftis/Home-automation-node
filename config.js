@@ -5,9 +5,7 @@ var inputConfigLoc = './input-config.json',
     outputConfigLoc = './output-config.json',
     idConfigLoc = './config.json';
 
-var outputs = require(outputConfigLoc),
-    inputs = require(inputConfigLoc),
-    node = require(idConfigLoc),
+var node = require(idConfigLoc),
     g = require('wiring-pi'),
     fs = require('fs'),
     os = require('os'),
@@ -16,34 +14,10 @@ var outputs = require(outputConfigLoc),
     chalk = require('chalk'),
     interfaces = os.networkInterfaces(),
     pinCount = (node.pinCount ? node.pinCount : 26),
-    registeredPins = {},
-    outputDriverLocs = [
-        "./drivers/outputs/relay/index.js"
-    ],
-    inputDriversLocs = [];
-
-var driverConfig;
-
-var outputDrivers = [],
-    inputDrivers = [],
-    driverId = 1;
+    registeredPins = {};
 
 for(var i = 1; i <= pinCount; i++){
     registeredPins[i] = false;
-}
-
-for(var i = 0; i <= outputDriverLocs.length; i++){
-    outputDrivers.push({
-        driver: require(outputDriverLocs[i]),
-        id: driverId++
-    });
-}
-
-for(var i = 0; i <= inputDriversLocs.length; i++){
-    inputDrivers.push({
-        driver: require(inputDriverLocs[i]),
-        id: driverId++
-    });
 }
 
 var error = function(str) { console.log(chalk.bold.red(str)); },
@@ -63,8 +37,6 @@ for (var j in interfaces) {
     }
 }
 
-g.setup('gpio');
-
 function writeConfig(fileLoc, obj, callback){
     if(!callback) callback = function(){};
 
@@ -75,13 +47,14 @@ function writeConfig(fileLoc, obj, callback){
     });
 }
 
+g.setup('gpio');
 exports.gpio = g;
 
 exports.getId = function(){
     return node.id;
 };
 
-exports.registerPin = function(pin){
+exports.registerPin = function(pin, obj){
     pin = +pin;
 
     if(!registeredPins[pin]){
@@ -91,86 +64,9 @@ exports.registerPin = function(pin){
     return false;
 };
 
-exports.getOutputs = function (){
-    return outputs;
-};
-
-exports.getOutputByName = function (name){
-    var output = false;
-
-    for(var i = 0; i < outputs.length; i++){
-        if(outputs[i].name === name){
-            output = outputs[i];
-        }
-    }
-
-    return output;
-};
-
-exports.getOutputByPin = function (pin){
-    var output = false;
-    pin = +pin;
-
-    for(var i = 0; i < outputs.length; i++){
-        if(+outputs[i].pin === pin){
-            output = outputs[i];
-        }
-    }
-
-    return output;
-};
-
-exports.getOutputByLocation = function (location){
-    var output = false;
-
-    for(var i = 0; i < outputs.length; i++){
-        if(outputs[i].location === location){
-            output = outputs[i];
-        }
-    }
-
-    return output;
-};
-
-exports.getInputs = function (){
-    return inputs;
-};
-
-exports.getInputByName = function (name){
-    var input = false;
-
-    for(var i = 0; i < inputs.length; i++){
-        if(inputs[i].name === name){
-            input = inputs[i];
-        }
-    }
-
-    return input;
-};
-
-exports.getInputByPin = function (pin){
-    var input = false;
-    pin = +pin;
-
-    for(var i = 0; i < inputs.length; i++){
-        if(+inputs[i].pin === pin){
-            input = inputs[i];
-        }
-    }
-
-    return input;
-};
-
-exports.getInputByLocation = function (location){
-    var input = false;
-
-    for(var i = 0; i < inputs.length; i++){
-        if(inputs[i].location === location){
-            input = inputs[i];
-        }
-    }
-
-    return input;
+exports.unRegisterPin = function(pin){
+    registeredPins[+pin] = false;
+    return true;
 };
 
 //If a change occurs before the post request is sent, it is bounced to the end of the callback list
@@ -226,110 +122,12 @@ exports.setServer = function(ip){
     return node.server = ip;
 };
 
-exports.addInput = function(inputConfig){
-    var foundInput = exports.getInputByPin(inputConfig.pin);
-
-    if(!foundInput && !exports.getOutputByPin(inputConfig.pin)) {
-        inputs.push(inputConfig);
-        writeConfig(inputConfigLoc, inputs);
-        success('Successfully add new input: ' + inputConfig.name + ', pin:' + inputConfig.pin);
-        return true;
-    }
-
-    error('Failed to add new input: ' + inputConfig.name + ', pin:' + inputConfig.pin);
-    return false;
-};
-
-exports.addOutput = function(outputConfig){
-    var foundOutput = exports.getOutputByPin(outputConfig.pin);
-
-    if(!foundOutput && !exports.getInputByPin(outputConfig.pin)) {
-        outputs.push(outputConfig);
-        writeConfig(outputConfigLoc, outputs);
-        success('Successfully add new output: ' + outputConfig.name + ', pin:' + outputConfig.pin);
-        return true;
-    }
-
-    error('Failed to add new output: ' + outputConfig.name + ', pin:' + outputConfig.pin);
-    return false;
-};
-
-exports.updateOutput = function(oldConfig, newConfig){
-    if(!newConfig) return false;
-
-    if(newConfig.location){
-        oldConfig.location = newConfig.location;
-    }
-
-    if(newConfig.name){
-        oldConfig.name = newConfig.name;
-    }
-
-    if(newConfig.description){
-        oldConfig.description = newConfig.description;
-    }
-
-    if(newConfig.pin){
-        if(!exports.getOutputByPin(newConfig.pin) && !exports.getInputByPin(newConfig.pin)) {
-            oldConfig.pin = newConfig.pin;
-        }
-    }
-
-    writeConfig(outputConfigLoc, outputs);
-    info('Updated output: ' + oldConfig.name + ', pin:' + oldConfig.pin);
-
-    return true;
-};
-
-exports.removeOutput = function(outputConfig){
-    var index = outputs.indexOf(outputConfig);
-
-    if(index != -1) {
-        outputs.splice(index, 1);
-        writeConfig(outputConfigLoc, outputs);
-        success('Successfully removed output: ' + outputConfig.name + ', pin:' + outputConfig.pin);
-        return true;
-    }
-
-    error('Failed to remove output: ' + outputConfig.name + ', pin:' + outputConfig.pin);
-    return false;
-};
-
-exports.updateInput = function(oldConfig, newConfig){
-    if(newConfig.location){
-        oldConfig.location = newConfig.location;
-    }
-    if(newConfig.name){
-        oldConfig.name = newConfig.name;
-    }
-    if(newConfig.description){
-        oldConfig.description = newConfig.description;
-    }
-    if(newConfig.invVal){
-        oldConfig.invVal = newConfig.invVal;
-    }
-    if(newConfig.pin){
-        oldConfig.pin = newConfig.pin;
-    }
-
+exports.saveInputs = function(inputs){
     writeConfig(inputConfigLoc, inputs);
-
-    info('Updated input: ' + oldConfig.name + ', pin:' + oldConfig.pin);
-    return true;
 };
 
-exports.removeInput = function(inputConfig){
-    var index = inputs.indexOf(inputConfig);
-
-    if(index != -1) {
-        inputs.splice(index, 1);
-        writeConfig(inputConfigLoc, inputs);
-        success('Successfully removed input: ' + inputConfig.name + ', pin:' + inputConfig.pin);
-        return true;
-    }
-
-    error('Failed to removed input: ' + inputConfig.name + ', pin:' + inputConfig.pin);
-    return false;
+exports.saveOutput = function(outputs){
+    writeConfig(outputConfigLoc, outputs);
 };
 
 var updateNode = function(newConfig){

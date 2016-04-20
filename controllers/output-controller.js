@@ -1,63 +1,38 @@
 'use strict';
 
 var _ = require('lodash'),
-    config = require('../config.js');
+    config = require('../config.js'),
+    outputConfigs = require('./output-config.json'),
+    driverController = require('./driver-controller.js'),
+    outputIds = 0,
+    outputsHash = {},
+    ouputs = [];
+
+function addOutput(driverName, config){
+    var driver = driverController.getDrivers(driverName);
+
+    if(driver){
+        var output = outputsHash[outputIds++] = new driver.setup(config);
+
+        output.id = outputIds;
+        ouputs.push(output);
+        return output;
+    }
+}
 
 function setupOutputs(){
-    var outputs = config.getOutputs();
+    var driver;
+    outputsHash = {};
+    ouputs = [];
 
-    for(var i = 0; i < outputs.length; i++){
-        config.gpio.pinMode(+outputs[i].pin, config.gpio.OUTPUT);
+    for(var i = 0; i < outputConfigs.length; i++){
+        addOutput(outputConfigs[i].name, outputConfigs[i].config)
     }
 }
 
 setupOutputs();
 
-function set(pin, newVal){
-    pin.val = newVal;
-    config.gpio.digitalWrite(+pin.pin, +newVal);
-}
-
-function toggle(pin){
-    set(pin, +!pin.val);
-}
-
 //REST functions
-
-exports.set = function(req, res){
-	var pinConfig = false;
-
-	if(req.body.pin){
-		pinConfig = config.getOutputByPin(req.body.pin)
-	}
-
-	if(req.body.name && !pinConfig){
-		pinConfig = config.getOutputByPin(req.body.name)
-	}
-
-	if(req.body.location && !pinConfig){
-		pinConfig = config.getOutputByPin(req.body.location)
-	}
-
-	var val = req.body.val;
-
-	if(pinConfig){
-		if(!_.isUndefined(val)){
-            val = +val;
-
-			if(val < 0){ val = 0 }
-			if(val > 1){ val = 1 }
-
-			set(pinConfig, +val);
-		}else{
-			toggle(pinConfig);
-		}
-
-		return res.send(pinConfig);
-	}
-
-	res.status(400).send('Missing or incorrect Output finding parameters');
-};
 
 exports.updateOutputs = function(req, res){
     setupOutputs();
@@ -68,43 +43,24 @@ exports.updateOutput = function(req, res){
     var oldOutput = req.output;
     var newOutput = req.body.output;
 
-    if(config.updateOutput(oldOutput, newOutput)){
-        setupOutputs();
-        return res.send(oldOutput); //should be updated
+    if(newOutput){
+        return res.send(oldOutput.updateConfig(newOutput)); //should be updated
     }
 
     return res.send("Error updating output.");
 };
 
 exports.addNewOutput = function(req, res){
-    var output = req.body.output,
-        newOutput = {};
+    var output = req.body;
 
-    if(output && output.pin){
-        newOutput.pin = output.pin;
+    if(output && output.driver && output.config){
+        var newOutput;
 
-        if(output.name){
-            newOutput.name = output.name;
-        }
-
-        if(output.location){
-            newOutput.location = output.location;
-        }
-
-        if(output.description){
-            newOutput.description = output.description;
-        }
-
-        if(output.val){
-            newOutput.val = output.val;
-        }
-
-        if (config.addOutput(newOutput)){
-            setupOutputs();
+        if(newOutput = addOutput(output.driver, output.config)){
             return res.send(newOutput);
         }
 
-        return res.status(400).send("Pin already in use, cannot add output");
+        return res.status(400).send("Error Adding Output");
     }
 
     return res.status(400).send("Output configuration is incorrect!");
@@ -131,14 +87,14 @@ exports.status = function(req, res){
 	res.jsonp(outputs);
 };
 
-exports.getOutputByPin = function (req, res, next, pin) {
+exports.getOutputByPin = function (req, res, next, id) {
     if (!pin) {
         return res.status(400).send({
             message: 'Output pin is invalid'
         });
     }
 
-    req.output = config.getOutputByPin(pin);
+    req.output = outputsHash[id];
 
     if (!req.output) {
         return res.status(400).send({
