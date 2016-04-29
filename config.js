@@ -9,9 +9,10 @@ var node = require(idConfigLoc),
     g = require('wiring-pi'),
     fs = require('fs'),
     os = require('os'),
-    _ = require('lodash'),
     request = require('request'),
+    crypto = require('crypto'),
     chalk = require('chalk'),
+    extend = require('util')._extend,
     interfaces = os.networkInterfaces(),
     pinCount = (node.pinCount ? node.pinCount : 26),
     registeredPins = {};
@@ -23,6 +24,14 @@ for(var i = 1; i <= pinCount; i++){
 var error = function(str) { console.log(chalk.bold.red(str)); },
     info = function(str) { console.log(chalk.blue.bold.underline(str)); },
     success = function(str) { console.log(chalk.green.bold(str)); };
+
+var types = {
+    number: typeof 1,
+    string: typeof '',
+    boolean: typeof true,
+    object: typeof {},
+    array: typeof []
+};
 
 //lets unsecure communication through for server talk, probably not that safe
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
@@ -75,9 +84,9 @@ exports.unRegisterPin = function(pin){
 var callbackList = [];
 var busy = false;
 
-exports.alertInputChange = function(pinConfig, resend){
+exports.alertInputChange = function(id, type, value, resend){
     if(busy){
-        var cPinConfig = _.clone(pinConfig);
+        var cPinConfig = extend({}, clone(pinConfig));
 
         callbackList.push(function(){
             exports.alertInputChange(cPinConfig, true)
@@ -130,6 +139,8 @@ exports.saveOutput = function(outputs){
     writeConfig(outputConfigLoc, outputs);
 };
 
+exports.writeConfig = writeConfig;
+
 var updateNode = function(newConfig){
     if(newConfig.name){
         node.name = newConfig.name;
@@ -166,5 +177,11 @@ exports.configServer = function(req, res){
 exports.serverInfo = function(req, res){
     return res.send(node);
 };
+
+exports.genId = function(){
+    return crypto.randomBytes(15).toString('hex');
+};
+
+exports.types = types;
 
 return exports;

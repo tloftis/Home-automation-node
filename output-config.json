@@ -3,11 +3,7 @@
     "name": "Living Room Light",
     "location": "Downstairs, living room, ceiling",
     "description": "test descriptor",
-    "type": "Boolean",
-    "driver": "Relay",
-    "val": true,
-    "config": {
-        "pin": 2
-    }
+    "driverId": "",
+    "config": {}
   }
 ]

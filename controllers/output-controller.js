@@ -1,50 +1,117 @@
 'use strict';
 
-var _ = require('lodash'),
-    config = require('../config.js'),
+var config = require('../config.js'),
     outputConfigs = require('./output-config.json'),
     driverController = require('./driver-controller.js'),
     outputIds = 0,
     outputsHash = {},
-    ouputs = [];
+    outputs = [];
 
-function addOutput(driverName, config){
-    var driver = driverController.getDrivers(driverName);
+function isNumber(val){
+    return typeof val === 'number';
+}
+
+function isBoolean(val){
+    return typeof val === 'boolean';
+}
+
+function isString(val){
+    return typeof val === 'string';
+}
+
+function isDefined(val){
+    return typeof val !== 'undefined';
+}
+
+function addOutput(outputConfig){
+    var driver = driverController.getOutputDriver(outputConfig.driverId);
 
     if(driver){
-        var output = outputsHash[outputIds++] = new driver.setup(config);
-
-        output.id = outputIds;
-        ouputs.push(output);
-        return output;
+        outputConfig.driver = new driver.setup(outputConfig.config);
+        outputConfig.id = ++outputIds;
+        outputsHash[outputConfig.id] = outputConfig;
+        outputs.push(outputConfig);
+        return outputConfig;
     }
+
+    return false;
 }
 
 function setupOutputs(){
-    var driver;
     outputsHash = {};
-    ouputs = [];
+    outputs = [];
 
     for(var i = 0; i < outputConfigs.length; i++){
-        addOutput(outputConfigs[i].name, outputConfigs[i].config)
+        addOutput(outputConfigs[i])
     }
 }
 
 setupOutputs();
 
-//REST functions
+function updateConfig(oldConfig, newConfig){
+    var modified = false;
 
+    if(isDefined(newConfig.name)){
+        oldConfig.name = newConfig.name + '';
+        modified = true;
+    }
+
+    if(isDefined(newConfig.location)){
+        oldConfig.location = newConfig.location + '';
+        modified = true;
+    }
+
+    if(isDefined(newConfig.description)){
+        oldConfig.description = newConfig.description + '';
+        modified = true;
+    }
+
+    if(isDefined(newConfig.config)){
+        oldConfig.driver.updateConfig(newConfig.config);
+        oldConfig.config = oldConfig.driver.getConfig();
+        modified = true;
+    }
+
+    if(modified){
+        master.saveOutput(outputs);
+    }
+
+    return modified;
+}
+
+/*
+ var current;
+ var compare;
+ var type;
+
+ for(var key in newConfig.config){
+     current = newConfig.config[key];
+     compare = oldConfig.config[key];
+
+     if(compare){
+         if(!compare.required || current){
+             type = typeof current;
+
+             if(compare.type === 'boolean'){
+
+             }
+         }
+     }
+ }
+*/
+
+//REST functions
 exports.updateOutputs = function(req, res){
     setupOutputs();
-    return res.send('Successfully updated output pin configurations');
+    return res.send('Successfully updated outputs');
 };
 
 exports.updateOutput = function(req, res){
     var oldOutput = req.output;
     var newOutput = req.body.output;
 
-    if(newOutput){
-        return res.send(oldOutput.updateConfig(newOutput)); //should be updated
+    if(newOutput && updateConfig(oldOutput, newOutput)){
+        return res.send(oldOutput);
     }
 
     return res.send("Error updating output.");
@@ -53,10 +120,10 @@ exports.updateOutput = function(req, res){
 exports.addNewOutput = function(req, res){
     var output = req.body;
 
-    if(output && output.driver && output.config){
+    if(output && output.driverId && output.config){
         var newOutput;
 
-        if(newOutput = addOutput(output.driver, output.config)){
+        if(newOutput = addOutput(output.config)){
             return res.send(newOutput);
         }
 
@@ -78,12 +145,6 @@ exports.removeOutput = function(req, res){
 };
 
 exports.status = function(req, res){
-    var outputs = config.getOutputs();
-
-    for(var i = 0; i < outputs.length;i++){
-        outputs[i].id = config.getId();
-    }
-
 	res.jsonp(outputs);
 };
 

@@ -1,4 +1,5 @@
 {
     "name": "Relay",
+    "type": "boolean",
     "description": "This setups relays on the pi"
 }

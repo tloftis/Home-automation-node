@@ -1,43 +1,36 @@
 'use strict';
 
-var _ = require('lodash'),
-    master = require('../../../config.js'),
-    name = 'Relay';
+var master = require('../../../config.js');
 
 function set(pin, newVal){
     master.gpio.digitalWrite(+pin.pin, +newVal);
 }
 
-exports.name = name;
-exports.type = 'boolean';
+function isNumber(val){
+    return typeof val === 'number';
+}
+
+function isBoolean(val){
+    return typeof val === 'boolean';
+}
+
 exports.config = {
     pin: {
         name: 'Pin',
-        type: 'number',
-        required: true
-    },
-    name: {
-        name: 'Name',
-        type: 'string',
-        required: false
-    },
-    location: {
-        name: 'Location',
-        type: 'string',
-        required: false
+        required: true,
+        pin: true
     },
     val: {
         name: 'Current Value',
-        type: 'boolean',
+        type: master.types.boolean,
         required: false
     }
 };
 
-//config{ pin };
 var setup = function(config) {
     var _this = this;
 
-    if(!config || !+config.pin){ //There is no 0 pin, so this should always fail be because of an error
+    if(!config || !+config.pin || !isNaN(+config.pin)){ //There is no 0 pin, so this should always fail be because of an error
         return new Error('No Pin Specified!');
     }
 
@@ -50,9 +43,7 @@ var setup = function(config) {
     master.gpio.pinMode(config.pin, master.gpio.OUTPUT);
     this.config = {};
     this.config.pin = config.pin;
-    this.config.location = config.location;
-    this.config.name = config.name;
-    this.set(config.val);
+    this.set(config.val); //Sets the this.config.val
 };
 
 setup.prototype.set = function(val){
@@ -63,38 +54,27 @@ setup.prototype.set = function(val){
 
 setup.prototype.updateConfig = function(config){
     var _this = this;
-    config.pin = +config.pin;
 
-    if(config.pin && (config.pin !== this.config.pin)){
+    if(config.pin && isNaN(+config.pin) && (+config.pin !== _this.config.pin)){ //There is no 0 pin, so this should always fail be because of an error
+        config.pin = +config.pin;
+
         if(master.registerPin(config.pin)){
-            master.unRegisterPin(this.config.pin);
-            this.config.pin = config.pin;
-            this.set(this.config.val);
+            master.unRegisterPin(_this.config.pin);
+            _this.config.pin = config.pin;
+            _this.set(_this.config.val);
         }
     }
 
-    if(typeof config.val !== 'undefined' && (config.val !== this.config.val)){
-        this.set(config.val);
+    if((isNumber(config.val) || isBoolean(config.val)) && (+config.val !== +_this.config.val)){
+        _this.set(config.val);
     }
 
-    if(config.location){
-        this.config.location = config.location;
-    }
-
-    if(config.name){
-        this.config.name = config.name;
-    }
-
-    return this.config;
+    return _this.config;
 };
 
 setup.prototype.getConfig = function(){
     var _this = this;
-
-    return {
-        name: name,
-        config: _this.config
-    };
+    return _this.config;
 };
 
 exports.setup = setup;

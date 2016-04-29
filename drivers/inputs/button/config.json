@@ -1,0 +1,5 @@
+{
+    "name": "Button",
+    "type": "boolean",
+    "description": "This is just a plan, connect input to ground button"
+}

@@ -1,106 +1,87 @@
 'use strict';
 
-var monitoredPins = {};//Holds callbacks for when pins change state
 var config = require('../config.js'),
-    _ = require('lodash'),
-    async = require('async');
+    inputConfigs = require('./input-config.json'),
+    driverController = require('./driver-controller.js'),
+    inputIds = 0,
+    inputsHash = {},
+    inputs = [];
 
-//This monitores the pins held by the monitoredPins array checking them every 10 ms
-var inputInterval = setInterval(function(){
-	var key;
-	
-	//The key is the pin number
-	for(key in monitoredPins){
-		monitoredPins[key].inter(config.gpio.digitalRead(+key));
-	}
-}, 10);
-
-//Okay, I admit this may be a bit of a custer to look at, but it is very flexable
-//Specify the pin the input is on, and specify a callback that fires every time the input pin state changes, giving the current value as an arg	
-function digChange(pinConfig, funct){
-	var pin = +pinConfig.pin; //this is here to make sure nothing gets changed out of scope, although that should only happen if it is an obj
-
-	//If the pin is already being monitored then just add to the list of callbacks
-	if(monitoredPins[pin]){
-		monitoredPins[pin].functs.push(funct);
-	}else{
-		//Here the pin is set to be an input by hardware, a var past is made to store the state last read by the software 
-		//a interval will come by and call inter giving the current state of the pin as input, that is compared with the past value
-		//If they don't match, then the state must have changed, call all calbacks, then update the past var to the new val
-        config.gpio.pinMode(pin, config.gpio.INPUT);
-        pinConfig.val = +(+config.gpio.digitalRead(pin) === +!pinConfig.invVal);
-		monitoredPins[pin] = {};
-
-        //just feed this function with the pins current state and it will fire and update if it had changed
-		monitoredPins[pin].inter = function(now){
-            now = +(+now === +!pinConfig.invVal); //this will inverse if invVal is true
-
-			if(now !== pinConfig.val){
-				for(var i = 0; i < monitoredPins[pin].functs.length; i++){
-					monitoredPins[pin].functs[i](now);
-				}
-
-                pinConfig.val = now;
-			}
-		};
-		
-		monitoredPins[pin].functs = [funct];	
-	}
-
-	//Returns a function that when called removes the callback and returns the callback function
-	return function removeCallback(){
-		var index = monitoredPins[pin].functs.indexOf(funct);
-		if(index !== -1){
-			monitoredPins[pin].functs.splice(index, 1);
-			
-			if(!monitoredPins[pin].functs.length){
-				delete monitoredPins[pin];	
-			}
-		}
-		
-		//Remove the operation of this function so it can't be repeatedly called and then return
-		//removeCallback = function(){};
-		return funct;
-	};
+function isNumber(val){
+    return typeof val === 'number';
 }
 
-var listners = [];
+function isBoolean(val){
+    return typeof val === 'boolean';
+}
 
-function setListeners(callback){
-    if(!callback) callback = function () {};
+function isString(val){
+    return typeof val === 'string';
+}
 
-    var inputs = config.getInputs(),
-        i = 0;
+function isDefined(val){
+    return typeof val !== 'undefined';
+}
 
-    //remove all listeners currently
-    for(i = 0; i < listners.length; i++){
-        listners[i]();
+function addInput(inputConfig){
+    var driver = driverController.getinputDriver(inputConfig.driverId);
+
+    if(driver){
+        inputConfig.driver = new driver.setup(inputConfig.config);
+        inputConfig.id = ++inputIds;
+        inputsHash[inputConfig.id] = inputConfig;
+        inputs.push(inputConfig);
+        return inputConfig;
     }
 
-    //empty listenrs list after reset
-    listners = [];
-
-    //repopulate listners with new ones
-    async.each(inputs, function(input, next){
-        listners.push(digChange(input, function(now){
-            config.alertInputChange(input);
-        }));
-
-        next();
-    }, callback);
+    return false;
 }
 
-setListeners();
+function setupInputs(){
+    inputsHash = {};
+    inputs = [];
+
+    for(var i = 0; i < inputConfigs.length; i++){
+        addInput(inputConfigs[i])
+    }
+}
+
+setupInputs();
+
+function updateConfig(oldConfig, newConfig){
+    var modified = false;
+
+    if(isDefined(newConfig.name)){
+        oldConfig.name = newConfig.name + '';
+        modified = true;
+    }
+
+    if(isDefined(newConfig.location)){
+        oldConfig.location = newConfig.location + '';
+        modified = true;
+    }
+
+    if(isDefined(newConfig.description)){
+        oldConfig.description = newConfig.description + '';
+        modified = true;
+    }
+
+    if(isDefined(newConfig.config)){
+        oldConfig.driver.updateConfig(newConfig.config);
+        oldConfig.config = oldConfig.driver.getConfig();
+        modified = true;
+    }
+
+    if(modified){
+        master.saveOutput(inputs);
+    }
+
+    return modified;
+}
 
 //REST functions
 
 exports.status = function(req, res){
-    var inputs = config.getInputs();
-
-    for(var i = 0; i < inputs.length;i++){
-        inputs[i].id = config.getId();
-    }
-
     res.jsonp(inputs);
 };
 
@@ -116,9 +97,6 @@ exports.addNewInput = function(req, res){
         }
         if(!newInput.name){
             newInput.name = '';
-        }
-        if(!newInput.invVal){
-            newInput.invVal = false;
         }
 
         if (config.addInput(newInput)){
