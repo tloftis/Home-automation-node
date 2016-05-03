@@ -1,9 +1,8 @@
 'use strict';
 
 var config = require('../config.js'),
-    inputConfigs = require('./input-config.json'),
+    inputConfigs = require('../input-config.json'),
     driverController = require('./driver-controller.js'),
-    inputIds = 0,
     inputsHash = {},
     inputs = [];
 
@@ -24,11 +23,11 @@ function isDefined(val){
 }
 
 function addInput(inputConfig){
-    var driver = driverController.getinputDriver(inputConfig.driverId);
+    var driver = driverController.getInputDriver(inputConfig.driverId);
 
     if(driver){
         inputConfig.driver = new driver.setup(inputConfig.config);
-        inputConfig.id = ++inputIds;
+        if(!inputConfig.id){ inputConfig.id = config.genId(); }
         inputsHash[inputConfig.id] = inputConfig;
         inputs.push(inputConfig);
         return inputConfig;
@@ -44,6 +43,8 @@ function setupInputs(){
     for(var i = 0; i < inputConfigs.length; i++){
         addInput(inputConfigs[i])
     }
+
+    config.saveInputs(inputs);
 }
 
 setupInputs();
@@ -73,7 +74,7 @@ function updateConfig(oldConfig, newConfig){
     }
 
     if(modified){
-        master.saveOutput(inputs);
+        config.saveInputs(inputs);
     }
 
     return modified;

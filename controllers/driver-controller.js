@@ -3,9 +3,9 @@
 var master = require('../config.js'),
     extend = require('util')._extend,
     outputDriverLocs = [
-        './drivers/outputs/relay'
+        '../drivers/outputs/relay'
     ],
-    inputDriversLocs = [];
+    inputDriverLocs = [];
 
 var outputDrivers = [],
     inputDrivers = [],
@@ -18,12 +18,13 @@ function updateInputDrivers(){
     inputDrivers = [];
     inputDriversHash = {};
 
-    for(var i = 0; i <= inputDriverLocs.length; i++){
+    for(var i = 0; i < inputDriverLocs.length; i++){
         driver = require(inputDriverLocs[i]);
         config = require(inputDriverLocs[i] + '/config.json');
 
         if(!config.id){
             config.id = master.genId();
+            console.log(config);
             master.writeConfig(inputDriverLocs[i] + '/config.json', config);
         }
 
@@ -39,9 +40,16 @@ function updateOutputDrivers(){
     outputDrivers = [];
     outputDriversHash = {};
 
-    for(var i = 0; i <= outputDriverLocs.length; i++){
+    for(var i = 0; i < outputDriverLocs.length; i++){
         driver = require(outputDriverLocs[i]);
-        driver.id = outputId++;
+        config = require(outputDriverLocs[i] + '/config.json');
+
+        if(!config.id){
+            config.id = master.genId();
+            master.writeConfig(outputDriverLocs[i] + '/config.json', config);
+        }
+
+        extend(driver, config);
         outputDrivers.push(driver);
         outputDriversHash[driver.id] = driver;
     }
@@ -55,7 +63,7 @@ exports.getOutputDrivers = function(id){
 };
 
 exports.getInputDrivers = function(id){
-    return inputDriversHash;
+    return inputDrivers;
 };
 
 exports.getOutputDriver = function(id){

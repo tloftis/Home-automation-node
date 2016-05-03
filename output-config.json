@@ -4,6 +4,9 @@
     "location": "Downstairs, living room, ceiling",
     "description": "test descriptor",
     "driverId": "",
-    "config": {}
+    "config": {
+      "pin": 4,
+      "val": 0
+    }
   }
 ]

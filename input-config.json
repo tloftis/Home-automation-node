@@ -4,6 +4,8 @@
     "location": "Downstairs, living room, south wall",
     "description": "Test",
     "driverId": "",
-    "config": {}
+    "config": {
+      "pin": 4
+    }
   }
 ]

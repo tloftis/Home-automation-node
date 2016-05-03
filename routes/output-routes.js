@@ -13,9 +13,9 @@ module.exports = function(app) {
         put(outputs.updateOutput).
         delete(outputs.removeOutput);
 
-    app.route('/api/output/set')
+    app.route('/api/output/set/:outputId')
         .post(outputs.set);
 
     // Finish by binding the user middleware
-    app.param('outputId', outputs.getOutputByPin);
+    app.param('outputId', outputs.getOutputById);
 };

@@ -1,9 +1,8 @@
 'use strict';
 
 var config = require('../config.js'),
-    outputConfigs = require('./output-config.json'),
+    outputConfigs = require('../output-config.json'),
     driverController = require('./driver-controller.js'),
-    outputIds = 0,
     outputsHash = {},
     outputs = [];
 
@@ -28,9 +27,10 @@ function addOutput(outputConfig){
 
     if(driver){
         outputConfig.driver = new driver.setup(outputConfig.config);
-        outputConfig.id = ++outputIds;
+        if(!outputConfig.id){ outputConfig.id = config.genId(); }
         outputsHash[outputConfig.id] = outputConfig;
         outputs.push(outputConfig);
+
         return outputConfig;
     }
 
@@ -44,6 +44,8 @@ function setupOutputs(){
     for(var i = 0; i < outputConfigs.length; i++){
         addOutput(outputConfigs[i])
     }
+
+    config.saveOutputs(outputs);
 }
 
 setupOutputs();
@@ -73,7 +75,7 @@ function updateConfig(oldConfig, newConfig){
     }
 
     if(modified){
-        master.saveOutput(outputs);
+        config.saveOutputs(outputs);
     }
 
     return modified;
@@ -144,11 +146,23 @@ exports.removeOutput = function(req, res){
     return res.status(400).send("Unable to remove output!");
 };
 
+exports.set = function(req, res){
+    var newOutput = req.output;
+
+    if(isDefined(req.value)){
+        newOutput.config = newOutput.driver.set(req.val);
+        master.saveOutputs(outputs);
+        return res.send(newOutput);
+    }
+
+    return res.status(400).send("Unable to set output, no value given!");
+};
+
 exports.status = function(req, res){
 	res.jsonp(outputs);
 };
 
-exports.getOutputByPin = function (req, res, next, id) {
+exports.getOutputById = function (req, res, next, id) {
     if (!pin) {
         return res.status(400).send({
             message: 'Output pin is invalid'

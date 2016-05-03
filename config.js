@@ -135,7 +135,7 @@ exports.saveInputs = function(inputs){
     writeConfig(inputConfigLoc, inputs);
 };
 
-exports.saveOutput = function(outputs){
+exports.saveOutputs = function(outputs){
     writeConfig(outputConfigLoc, outputs);
 };
 
@@ -179,7 +179,7 @@ exports.serverInfo = function(req, res){
 };
 
 exports.genId = function(){
-    return crypto.randomBytes(15).toString('hex');
+    return crypto.randomBytes(25).toString('hex');
 };
 
 exports.types = types;
