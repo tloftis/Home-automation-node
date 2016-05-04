@@ -13,6 +13,7 @@
     "body-parser": "^1.14.2",
     "chalk": "^1.1.1",
     "express": "^4.13.3",
+    "glob": "^7.0.3",
     "request": "^2.69.0",
     "wiring-pi": "^2.1.1"
   }

@@ -1,5 +1,6 @@
 {
     "name": "Button",
     "type": "boolean",
-    "description": "This is just a plan, connect input to ground button"
+    "description": "This is just a plan, connect input to ground button",
+    "id": "0ac5b40993ee07ce289738a3c6bad2496f313071d900576b96"
 }

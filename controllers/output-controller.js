@@ -151,7 +151,7 @@ exports.set = function(req, res){
 
     if(isDefined(req.value)){
         newOutput.config = newOutput.driver.set(req.val);
-        master.saveOutputs(outputs);
+        config.saveOutputs(outputs);
         return res.send(newOutput);
     }
 

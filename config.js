@@ -6,11 +6,11 @@ var inputConfigLoc = './input-config.json',
     idConfigLoc = './config.json';
 
 var node = require(idConfigLoc),
-    g = require('wiring-pi'),
     fs = require('fs'),
     os = require('os'),
-    request = require('request'),
     crypto = require('crypto'),
+    g = require('wiring-pi'),
+    request = require('request'),
     chalk = require('chalk'),
     extend = require('util')._extend,
     interfaces = os.networkInterfaces(),
@@ -54,6 +54,25 @@ function writeConfig(fileLoc, obj, callback){
     fs.writeFile(fileLoc, objStr, function(err) {
         callback(err);
     });
+}
+
+function updateNode(newConfig){
+    if(newConfig.name){
+        node.name = newConfig.name;
+    }
+
+    if(newConfig.description){
+        node.description = newConfig.description;
+    }
+
+    if(newConfig.location){
+        node.location = newConfig.location;
+    }
+
+    writeConfig(idConfigLoc, node);
+
+    info('Updated node config: ' + node.name + ', location:' + node.location);
+    return true;
 }
 
 g.setup('gpio');
@@ -141,24 +160,7 @@ exports.saveOutputs = function(outputs){
 
 exports.writeConfig = writeConfig;
 
-var updateNode = function(newConfig){
-    if(newConfig.name){
-        node.name = newConfig.name;
-    }
-
-    if(newConfig.description){
-        node.description = newConfig.description;
-    }
-
-    if(newConfig.location){
-        node.location = newConfig.location;
-    }
-
-    writeConfig(idConfigLoc, node);
-
-    info('Updated node config: ' + node.name + ', location:' + node.location);
-    return true;
-};
+//REST Api
 
 exports.registerServer = function(req, res){
     node.server = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
