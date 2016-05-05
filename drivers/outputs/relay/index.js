@@ -41,9 +41,9 @@ var setup = function(config) {
     }
 
     master.gpio.pinMode(config.pin, master.gpio.OUTPUT);
-    this.config = {};
-    this.config.pin = config.pin;
-    this.set(config.val); //Sets the this.config.val
+    _this.config = {};
+    _this.config.pin = config.pin;
+    _this.set(config.val); //Sets the this.config.val
 };
 
 setup.prototype.set = function(val){

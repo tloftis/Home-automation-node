@@ -24,7 +24,7 @@ function digChange(pinConfig, funct){
     }else{
         //a interval will come by and call inter giving the current state of the pin as input, that is compared with the past value
         //If they don't match, then the state must have changed, call all calbacks, then update the past var to the new val
-        pinConfig.val = (+(master.gpio.digitalRead(pin)) === 1);
+        pinConfig.val = master.gpio.digitalRead(pin);
         monitoredPins[pin] = {};
 
         //just feed this function with the pins current state and it will fire and update if it had changed
@@ -79,7 +79,7 @@ exports.config = {
 var setup = function(config, listener) {
     var _this = this;
 
-    if(!config || !+config.pin || !isNaN(+config.pin)){ //There is no 0 pin, so this should always fail be because of an error
+    if(!config || !+config.pin || isNaN(+config.pin)){ //There is no 0 pin, so this should always fail be because of an error
         return new Error('No Pin Specified!');
     }
 
@@ -91,9 +91,9 @@ var setup = function(config, listener) {
 
     master.gpio.pinMode(config.pin, master.gpio.INPUT);
 
-    this.config = {};
-    this.config.pin = config.pin;
-    this.listener = digChange(this.config, listener); //This sets the val property of this.config
+    _this.config = {};
+    _this.config.pin = config.pin;
+    _this.listener = digChange(this.config, listener); //This sets the val property of this.config
 };
 
 setup.prototype.updateConfig = function(config){

@@ -26,8 +26,12 @@ function addInput(inputConfig){
     var driver = driverController.getInputDriver(inputConfig.driverId);
 
     if(driver){
-        inputConfig.driver = new driver.setup(inputConfig.config);
         if(!inputConfig.id){ inputConfig.id = config.genId(); }
+
+        inputConfig.driver = new driver.setup(inputConfig.config, function(val){
+            config.alertInputChange(inputConfig.id, driver.type, val);
+        });
+
         inputsHash[inputConfig.id] = inputConfig;
         inputs.push(inputConfig);
         return inputConfig;

@@ -1,6 +1,6 @@
 'use strict';
 
-
+//Gets the absolute location of the folder contained by a require file selector
 function rationalizePaths(array){
     for(var i = 0, len = array.length; i < len; i++){
         //I know, this is very unneeded, but I like having it because of it's over bearing round-a-boutness

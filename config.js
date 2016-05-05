@@ -21,9 +21,9 @@ for(var i = 1; i <= pinCount; i++){
     registeredPins[i] = false;
 }
 
-var error = function(str) { console.log(chalk.bold.red(str)); },
-    info = function(str) { console.log(chalk.blue.bold.underline(str)); },
-    success = function(str) { console.log(chalk.green.bold(str)); };
+var error = function(str, obj) { console.log(chalk.bold.red(str), obj); },
+    info = function(str, obj) { console.log(chalk.blue.bold.underline(str), obj); },
+    success = function(str, obj) { console.log(chalk.green.bold(str), obj); };
 
 var types = {
     number: typeof 1,
@@ -98,17 +98,13 @@ exports.unRegisterPin = function(pin){
 };
 
 //If a change occurs before the post request is sent, it is bounced to the end of the callback list
-//A clone is made of the object since the object keeps it's reference to the original object and would
-//update otherwise just resending the old data back over and over again until req responds or node.server is undefined
 var callbackList = [];
 var busy = false;
 
-exports.alertInputChange = function(id, type, value, resend){
+exports.alertInputChange = function(id, type, value){
     if(busy){
-        var cPinConfig = extend({}, clone(pinConfig));
-
         callbackList.push(function(){
-            exports.alertInputChange(cPinConfig, true)
+            exports.alertInputChange(id, type, value)
         });
 
         return;
@@ -117,21 +113,21 @@ exports.alertInputChange = function(id, type, value, resend){
     busy = true;
 
     if(!node.server) {
-        if(!resend) console.log('No server currently registered');
+        error('No server currently registered');
         busy = false;
         return;
     }
 
     var info = {
-        url: 'https://' + node.server + '/api/node/' + exports.getId() + '/update',
-        form: { config: pinConfig },
+        url: 'https://' + node.server + '/api/input/' + id,
+        form: { value: value, type: type },
         timeout: 10000,
         rejectUnhauthorized : false
     };
 
     request.post(info, function(err, resp, body){
         if(err){
-            error('Error updating server with input change of input ' + pinConfig.name + ', pin: ' + pinConfig.pin + '!');
+            error('Error updating server with input change of input ' + pinConfig.name + '!', pinConfig);
         }
 
         busy = false;
@@ -151,11 +147,37 @@ exports.setServer = function(ip){
 };
 
 exports.saveInputs = function(inputs){
-    writeConfig(inputConfigLoc, inputs);
+    //Remove the driver property before saving, it isn't needed
+    var strippedInputs = inputs.map(function(obj){
+        var newObj = {};
+
+        for(var key in obj){
+            if(key !== 'driver'){
+                newObj[key] = obj[key];
+            }
+        }
+
+        return newObj;
+    });
+
+    writeConfig(inputConfigLoc, strippedInputs);
 };
 
 exports.saveOutputs = function(outputs){
-    writeConfig(outputConfigLoc, outputs);
+    //Remove the driver property before saving, it isn't needed
+    var strippedOutputs = outputs.map(function(obj){
+        var newObj = {};
+
+        for(var key in obj){
+            if(key !== 'driver'){
+                newObj[key] = obj[key];
+            }
+        }
+
+        return newObj;
+    });
+
+    writeConfig(outputConfigLoc, strippedOutputs);
 };
 
 exports.writeConfig = writeConfig;
