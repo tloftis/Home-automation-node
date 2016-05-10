@@ -85,7 +85,6 @@ function updateConfig(oldConfig, newConfig){
 }
 
 //REST functions
-
 exports.status = function(req, res){
     res.jsonp(inputs);
 };
@@ -93,7 +92,7 @@ exports.status = function(req, res){
 exports.addNewInput = function(req, res){
     var newInput = req.body.input;
 
-    if(newInput && newInput.pin){
+    if(newInput && newInput.driverId){
         if(!newInput.location){
             newInput.location = '';
         }
@@ -104,12 +103,11 @@ exports.addNewInput = function(req, res){
             newInput.name = '';
         }
 
-        if (config.addInput(newInput)){
-            setListeners();
+        if(newInput = addInput(newInput)){
             return res.send(newInput);
         }
 
-        return res.status(400).send("Pin already in use, cannot add input");
+        return res.status(400).send("Error Adding Input");
     }
 
     return res.status(400).send("Input configuration is incorrect!");

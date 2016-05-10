@@ -120,12 +120,20 @@ exports.updateOutput = function(req, res){
 };
 
 exports.addNewOutput = function(req, res){
-    var output = req.body;
+    var newOutput = req.body.output;
 
-    if(output && output.driverId && output.config){
-        var newOutput;
+    if(newOutput && newOutput.driverId){
+        if(!newOutput.location){
+            newOutput.location = '';
+        }
+        if(!newOutput.description){
+            newOutput.description = '';
+        }
+        if(!newOutput.name){
+            newOutput.name = '';
+        }
 
-        if(newOutput = addOutput(output.config)){
+        if(newOutput = addOutput(newOutput)){
             return res.send(newOutput);
         }
 

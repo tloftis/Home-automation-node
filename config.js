@@ -127,7 +127,7 @@ exports.alertInputChange = function(id, type, value){
 
     request.post(info, function(err, resp, body){
         if(err){
-            error('Error updating server with input change of input ' + pinConfig.name + '!', pinConfig);
+            error('Error updating server with input change of ' + pinConfig.name + '!', pinConfig);
         }
 
         busy = false;
