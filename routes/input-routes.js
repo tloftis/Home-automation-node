@@ -2,12 +2,16 @@
 
 var config = require('../config.js');
 var inputs = require('../controllers/input-controller');
+var drivers = require('../controllers/driver-controller');
 
 module.exports = function(app) {
 	app.route('/api/input')
 		.get(inputs.status)
         .put(inputs.updateInputs)
         .post(inputs.addNewInput);
+
+	app.route('/api/input/drivers')
+		.get(drivers.inputDrivers);
 
 	app.route('/api/input/:inputPin').
 		put(inputs.updateInput).

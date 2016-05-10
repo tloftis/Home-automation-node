@@ -66,11 +66,11 @@ function updateOutputDrivers(){
 updateOutputDrivers();
 updateInputDrivers();
 
-exports.getOutputDrivers = function(id){
+exports.getOutputDrivers = function(){
     return outputDrivers;
 };
 
-exports.getInputDrivers = function(id){
+exports.getInputDrivers = function(){
     return inputDrivers;
 };
 
@@ -80,6 +80,15 @@ exports.getOutputDriver = function(id){
 
 exports.getInputDriver = function(id){
     return inputDriversHash[id];
+};
+
+//REST functions
+exports.outputDrivers = function(req, res){
+    res.jsonp(outputDrivers);
+};
+
+exports.inputDrivers = function(req, res){
+    res.jsonp(inputDrivers);
 };
 
 return exports;

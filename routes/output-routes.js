@@ -2,12 +2,16 @@
 
 var config = require('../config.js');
 var outputs = require('../controllers/output-controller');
+var drivers = require('../controllers/driver-controller');
 
 module.exports = function(app) {
     app.route('/api/output')
         .get(outputs.status)
         .put(outputs.updateOutputs)
         .post(outputs.addNewOutput);
+
+    app.route('/api/output/drivers')
+        .get(drivers.outputDrivers);
 
     app.route('/api/output/:outputId').
         put(outputs.updateOutput).
