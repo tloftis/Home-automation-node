@@ -176,10 +176,11 @@ exports.removeOutput = function(req, res){
 };
 
 exports.set = function(req, res){
-    var newOutput = req.output;
+    var newOutput = req.output,
+        value = req.body ? req.body.value : undefined;
 
-    if(isDefined(req.value)){
-        newOutput.config = newOutput.driver.set(req.val);
+    if(isDefined(value)){
+        newOutput.config = newOutput.driver.set(value);
         config.saveOutputs(outputs);
         return res.send(newOutput);
     }

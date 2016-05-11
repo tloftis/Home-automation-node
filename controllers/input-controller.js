@@ -142,7 +142,7 @@ exports.addNewInput = function(req, res){
 };
 
 exports.updateInputs = function(req, res){
-    setupInputs()
+    setupInputs();
     return res.send("Successfully updated input pin configurations");
 };
 
