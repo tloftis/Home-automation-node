@@ -71,10 +71,24 @@ function updateConfig(oldConfig, newConfig){
         modified = true;
     }
 
-    if(isDefined(newConfig.config)){
-        oldConfig.driver.updateConfig(newConfig.config);
-        oldConfig.config = oldConfig.driver.getConfig();
-        modified = true;
+    if(isDefined(newConfig.driverId) && (newConfig.driverId !== oldConfig.driverId)){
+        var newDriver = driverController.getInputDriver(newConfig.driverId);
+
+        if(newDriver && isDefined(newConfig.config)){
+            oldConfig.driver.destroy();
+
+            oldConfig.driver = new driver.setup(newConfig.config, function(val){
+                config.alertInputChange(oldConfig.id, driver.type, val);
+            });
+
+            modified = true;
+        }
+    }else{
+        if(isDefined(newConfig.config) && !compareObjectShallow(oldConfig.config, newConfig.config)){
+            oldConfig.driver.updateConfig(newConfig.config);
+            oldConfig.config = oldConfig.driver.getConfig();
+            modified = true;
+        }
     }
 
     if(modified){
@@ -82,6 +96,20 @@ function updateConfig(oldConfig, newConfig){
     }
 
     return modified;
+}
+
+function compareObjectShallow(obj1, obj2){
+    if(typeof obj1 !== 'object' || typeof obj2 !== 'object'){
+        return false;
+    }
+
+    for(var key in obj1){
+        if(!obj2[key] || (obj2[key] !== obj1[key])){
+            return false
+        }
+    }
+
+    return true;
 }
 
 //REST functions

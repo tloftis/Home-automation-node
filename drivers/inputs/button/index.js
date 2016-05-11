@@ -112,6 +112,12 @@ setup.prototype.updateConfig = function(config){
     return _this.config;
 };
 
+setup.prototype.destroy = function(){
+    var _this = this;
+    _this.listener();
+    master.unRegisterPin(_this.config.pin);
+};
+
 setup.prototype.getConfig = function(){
     var _this = this;
     return _this.config;
