@@ -142,7 +142,7 @@ exports.addNewInput = function(req, res){
 };
 
 exports.updateInputs = function(req, res){
-    setListeners();
+    setupInputs()
     return res.send("Successfully updated input pin configurations");
 };
 
@@ -150,21 +150,19 @@ exports.updateInput = function(req, res){
     var oldInput = req.input;
     var newInput = req.body.input;
 
-    config.updateInput(oldInput, newInput);
-    setListeners();
+    if(newInput && updateConfig(oldInput, newInput)){
+        return res.send(oldInput);
+    }
 
-    return res.send(oldInput);
+    return res.status(400).send("Error updating input.");
 };
 
 exports.removeInput = function(req, res){
     var newInput = req.input;
-
-    if (config.removeInput(newInput)){
-        setListeners();
-        return res.send(newInput);
-    }
-
-    return res.status(400).send("Unable to remove input!");
+    newInput.driver.destroy();
+    inputs.splice(inputs.indexOf(newInput), 1);
+    config.saveInputs(inputs);
+    return res.send(newInput);
 };
 
 exports.getInputByPin = function (req, res, next, pin) {

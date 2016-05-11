@@ -140,7 +140,7 @@ exports.updateOutput = function(req, res){
         return res.send(oldOutput);
     }
 
-    return res.send("Error updating output.");
+    return res.status(400).send("Error updating output.");
 };
 
 exports.addNewOutput = function(req, res){
@@ -169,13 +169,10 @@ exports.addNewOutput = function(req, res){
 
 exports.removeOutput = function(req, res){
     var newOutput = req.output;
-
-    if (config.removeOutput(newOutput)){
-        setupOutputs();
-        return res.send(newOutput);
-    }
-
-    return res.status(400).send("Unable to remove output!");
+    newOutput.driver.destroy();
+    outputs.splice(outputs.indexOf(newOutput), 1);
+    config.saveOutputs(outputs);
+    return res.send(newOutput);
 };
 
 exports.set = function(req, res){
