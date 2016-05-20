@@ -32,6 +32,11 @@ function addInput(inputConfig){
             config.alertInputChange(inputConfig.id, driver.type, val);
         });
 
+        if(inputConfig.driver instanceof Error){
+            config.error('Input Driver Failure:', inputConfig.driver);
+            return;
+        }
+
         inputsHash[inputConfig.id] = inputConfig;
         inputs.push(inputConfig);
         return inputConfig;
@@ -165,14 +170,14 @@ exports.removeInput = function(req, res){
     return res.send(newInput);
 };
 
-exports.getInputByPin = function (req, res, next, pin) {
-    if (!pin) {
+exports.getInputById = function (req, res, next, id) {
+    if (!id) {
         return res.status(400).send({
-            message: 'Input pin is invalid'
+            message: 'Input id is invalid'
         });
     }
 
-    req.input = config.getInputByPin(pin);
+    req.input = inputsHash[id];
 
     if (!req.input) {
         return res.status(400).send({

@@ -18,5 +18,5 @@ module.exports = function(app) {
 		delete(inputs.removeInput);
 
 	// Finish by binding the user middleware
-	app.param('inputPin', inputs.getInputByPin);
+	app.param('inputPin', inputs.getInputById);
 };

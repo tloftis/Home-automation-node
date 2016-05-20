@@ -33,6 +33,10 @@ var types = {
     array: typeof []
 };
 
+exports.error = error;
+exports.info = info;
+exports.success = success;
+
 //lets unsecure communication through for server talk, probably not that safe
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
@@ -82,7 +86,7 @@ exports.getId = function(){
     return node.id;
 };
 
-exports.registerPin = function(pin, obj){
+exports.registerPin = function(pin){
     pin = +pin;
 
     if(!registeredPins[pin]){
@@ -127,7 +131,7 @@ exports.alertInputChange = function(id, type, value){
 
     request.post(info, function(err, resp, body){
         if(err){
-            error('Error updating server with input change of ' + pinConfig.name + '!', pinConfig);
+            error('Error updating server with input ' + id + '!');
         }
 
         busy = false;
@@ -189,7 +193,7 @@ exports.registerServer = function(req, res){
     node.server =  node.server.match(/\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b/g)[0];
     info('Registered new server, IP:' + node.server);
     writeConfig(idConfigLoc, node);
-    return res.send('Registered IP ' + node.server);
+    return res.send(node);
 };
 
 exports.configServer = function(req, res){

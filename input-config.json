@@ -5,7 +5,7 @@
         "description": "Test",
         "driverId": "0ac5b40993ee07ce289738a3c6bad2496f313071d900576b96",
         "config": {
-            "pin": 4
+            "pin": 2
         },
         "id": "48cea099d53eac663be9ad47df44cb2e80c1795daff066b4c7"
     }

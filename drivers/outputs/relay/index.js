@@ -30,7 +30,7 @@ exports.config = {
 var setup = function(config) {
     var _this = this;
 
-    if(!config || !+config.pin || !isNaN(+config.pin)){ //There is no 0 pin, so this should always fail be because of an error
+    if(!config || !+config.pin || isNaN(+config.pin)){ //There is no 0 pin, so this should always fail be because of an error
         return new Error('No Pin Specified!');
     }
 
@@ -47,8 +47,8 @@ var setup = function(config) {
 };
 
 setup.prototype.set = function(val){
-    set(this.config, val);
-    this.config.val = (+val === 1);
+    set(this.config, val ? 1 : 0);
+    this.config.val = val ? true : false;
     return this.config;
 };
 

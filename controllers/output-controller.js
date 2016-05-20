@@ -4,7 +4,8 @@ var config = require('../config.js'),
     outputConfigs = require('../output-config.json'),
     driverController = require('./driver-controller.js'),
     outputsHash = {},
-    outputs = [];
+    outputs = [],
+    badOutputs = [];
 
 function isNumber(val){
     return typeof val === 'number';
@@ -27,6 +28,12 @@ function addOutput(outputConfig){
 
     if(driver){
         outputConfig.driver = new driver.setup(outputConfig.config);
+
+        if(outputConfig.driver instanceof Error){
+            config.error('Output Driver Failure:', outputConfig.driver);
+            return;
+        }
+
         if(!outputConfig.id){ outputConfig.id = config.genId(); }
         outputsHash[outputConfig.id] = outputConfig;
         outputs.push(outputConfig);
@@ -105,27 +112,6 @@ function compareObjectShallow(obj1, obj2){
     return true;
 }
 
-/*
- var current;
- var compare;
- var type;
-
- for(var key in newConfig.config){
-     current = newConfig.config[key];
-     compare = oldConfig.config[key];
-
-     if(compare){
-         if(!compare.required || current){
-             type = typeof current;
-
-             if(compare.type === 'boolean'){
-
-             }
-         }
-     }
- }
-*/
-
 //REST functions
 exports.updateOutputs = function(req, res){
     setupOutputs();
@@ -193,9 +179,9 @@ exports.status = function(req, res){
 };
 
 exports.getOutputById = function (req, res, next, id) {
-    if (!pin) {
+    if (!id) {
         return res.status(400).send({
-            message: 'Output pin is invalid'
+            message: 'Output id is invalid'
         });
     }
 
