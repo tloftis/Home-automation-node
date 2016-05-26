@@ -66,7 +66,7 @@ function updateConfig(oldConfig, newConfig){
 
     //Recasting type based on driver specification
     if(isDefined(newConfig.config) && isDefined(oldConfig.driver) && isDefined(oldConfig.driver.config)){
-        var drive = driverController.getOutputDriver(oldConfig.driverId);
+        var drive = driverController.getOutputDriver(newConfig.driverId);
 
         for(var key in newConfig.config){
             if(drive.config[key].type === 'boolean'){
@@ -88,19 +88,20 @@ function updateConfig(oldConfig, newConfig){
         var newDriver = driverController.getInputDriver(newConfig.driverId);
 
         if(newDriver && isDefined(newConfig.config)){
-            oldConfig.driverId = newConfig.driverId;
             oldConfig.driver.destroy();
 
             oldConfig.driver = new driver.setup(newConfig.config, function(val){
                 config.alertInputChange(oldConfig.id, driver.type, val);
             });
 
+            oldConfig.driverId = newConfig.driverId;
+            oldConfig.config = newConfig.config;
             modified = true;
         }
     }else{
         if(isDefined(newConfig.config) && !compareObjectShallow(oldConfig.config, newConfig.config)){
             oldConfig.driver.updateConfig(newConfig.config);
-            oldConfig.config = oldConfig.driver.getConfig();
+            oldConfig.config = newConfig.config;
             modified = true;
         }
     }
@@ -114,6 +115,10 @@ function updateConfig(oldConfig, newConfig){
 
 function compareObjectShallow(obj1, obj2){
     if(typeof obj1 !== 'object' || typeof obj2 !== 'object'){
+        return false;
+    }
+
+    if(Object.keys(obj1).length !== Object.keys(obj2)){
         return false;
     }
 
