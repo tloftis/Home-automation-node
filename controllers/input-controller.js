@@ -65,22 +65,26 @@ function updateConfig(oldConfig, newConfig){
     }
 
     //Recasting type based on driver specification
-    if(isDefined(newConfig.config) && isDefined(oldConfig.driver) && isDefined(oldConfig.driver.config)){
-        var drive = driverController.getOutputDriver(newConfig.driverId);
+    if(isDefined(newConfig.config)){
+        var drive = driverController.getInputDriver(newConfig.driverId);
 
-        for(var key in newConfig.config){
-            if(drive.config[key].type === 'boolean'){
-                if(newConfig.config[key] === 'true'){ newConfig.config[key] = true; }
-                if(newConfig.config[key] === 'false'){ newConfig.config[key] = false; }
-            }
+        if(drive){
+            for(var key in newConfig.config){
+                if(drive.config[key].type === 'boolean'){
+                    if(newConfig.config[key] === 'true'){ newConfig.config[key] = true; }
+                    if(newConfig.config[key] === 'false'){ newConfig.config[key] = false; }
+                }
 
-            if(drive.config[key].type === 'string'){
-                newConfig.config[key] += '';
-            }
+                if(drive.config[key].type === 'string'){
+                    newConfig.config[key] += '';
+                }
 
-            if(drive.config[key].type === 'number' || drive.config[key].pin){
-                newConfig.config[key] = +newConfig.config[key];
+                if(drive.config[key].type === 'number' || drive.config[key].pin){
+                    newConfig.config[key] = +newConfig.config[key];
+                }
             }
+        }else{
+            return;
         }
     }
 
@@ -90,8 +94,8 @@ function updateConfig(oldConfig, newConfig){
         if(newDriver && isDefined(newConfig.config)){
             oldConfig.driver.destroy();
 
-            oldConfig.driver = new driver.setup(newConfig.config, function(val){
-                config.alertInputChange(oldConfig.id, driver.type, val);
+            oldConfig.driver = new newDriver.setup(newConfig.config, function(val){
+                config.alertInputChange(oldConfig.id, oldConfig.driver.type, val);
             });
 
             oldConfig.driverId = newConfig.driverId;
@@ -151,6 +155,7 @@ exports.addNewInput = function(req, res){
         }
 
         if(newInput = addInput(newInput)){
+            config.saveInputs(inputs);
             return res.send(newInput);
         }
 
