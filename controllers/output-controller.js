@@ -4,20 +4,7 @@ var config = require('../config.js'),
     outputConfigs = require('../output-config.json'),
     driverController = require('./driver-controller.js'),
     outputsHash = {},
-    outputs = [],
-    badOutputs = [];
-
-function isNumber(val){
-    return typeof val === 'number';
-}
-
-function isBoolean(val){
-    return typeof val === 'boolean';
-}
-
-function isString(val){
-    return typeof val === 'string';
-}
+    outputs = [];
 
 function isDefined(val){
     return typeof val !== 'undefined';
@@ -163,9 +150,23 @@ exports.removeOutput = function(req, res){
 
 exports.set = function(req, res){
     var newOutput = req.output,
-        value = req.body ? req.body.value : undefined;
+        value = req.body ? req.body.value : undefined,
+        type = req.body ? req.body.type : undefined;
 
     if(isDefined(value)){
+        if(config.types.boolean === type){
+            if(value === 'true'){ value = true; }
+            if(value === 'false'){ value = false; }
+        }
+
+        if(config.types.string === type){
+            value += '';
+        }
+
+        if(config.types.number === type){
+            value = +value;
+        }
+
         newOutput.config = newOutput.driver.set(value);
         config.saveOutputs(outputs);
         return res.send(newOutput);
