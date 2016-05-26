@@ -1,12 +1,12 @@
 [
     {
-        "name": "Living Room Light",
-        "location": "Downstairs, living room, ceiling",
-        "description": "test descriptor",
+        "name": "Test laptop machine",
+        "location": "On work desk",
+        "description": "test description now here",
         "driverId": "a4b47c131486e79da35190b3f964fe6ebe2337c4e1399caf02",
         "config": {
-            "pin": 4,
-            "val": false
+            "pin": 5,
+            "val": true
         },
         "id": "ae51dec6025f4b46d162b6bf2af84dc6eadc8c407fbf88eda4"
     }

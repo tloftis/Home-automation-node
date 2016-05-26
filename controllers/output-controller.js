@@ -62,10 +62,31 @@ function updateConfig(oldConfig, newConfig){
         modified = true;
     }
 
+    //Recasting type based on driver specification
+    if(isDefined(newConfig.config) && isDefined(oldConfig.driver) && isDefined(oldConfig.driver.config)){
+        var drive = driverController.getOutputDriver(oldConfig.driverId);
+
+        for(var key in newConfig.config){
+            if(drive.config[key].type === 'boolean'){
+                if(newConfig.config[key] === 'true'){ newConfig.config[key] = true; }
+                if(newConfig.config[key] === 'false'){ newConfig.config[key] = false; }
+            }
+
+            if(drive.config[key].type === 'string'){
+                newConfig.config[key] += '';
+            }
+
+            if(drive.config[key].type === 'number' || drive.config[key].pin){
+                newConfig.config[key] = +newConfig.config[key];
+            }
+        }
+    }
+
     if(isDefined(newConfig.driverId) && (newConfig.driverId !== oldConfig.driverId)){
         var newDriver = driverController.getOutputDriver(newConfig.driverId);
 
         if(newDriver && isDefined(newConfig.config)){
+            oldConfig.driverId = newConfig.driverId;
             oldConfig.driver.destroy();
             oldConfig.driver = new driver.setup(newConfig.config);
             modified = true;

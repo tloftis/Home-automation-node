@@ -55,7 +55,7 @@ setup.prototype.set = function(val){
 setup.prototype.updateConfig = function(config){
     var _this = this;
 
-    if(config.pin && isNaN(+config.pin) && (+config.pin !== _this.config.pin)){ //There is no 0 pin, so this should always fail be because of an error
+    if(config.pin && !isNaN(+config.pin) && (+config.pin !== _this.config.pin)){ //There is no 0 pin, so this should always fail be because of an error
         config.pin = +config.pin;
 
         if(master.registerPin(config.pin)){
@@ -65,7 +65,7 @@ setup.prototype.updateConfig = function(config){
         }
     }
 
-    if((isNumber(config.val) || isBoolean(config.val)) && (+config.val !== +_this.config.val)){
+    if(isNumber(config.val) || isBoolean(config.val)){
         _this.set(config.val);
     }
 
