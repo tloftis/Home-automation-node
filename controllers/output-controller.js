@@ -157,6 +157,7 @@ exports.addNewOutput = function(req, res){
         }
 
         if(newOutput = addOutput(newOutput)){
+            config.saveOutputs(outputs);
             return res.send(newOutput);
         }
 
