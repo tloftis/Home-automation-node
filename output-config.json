@@ -6,7 +6,7 @@
         "driverId": "a4b47c131486e79da35190b3f964fe6ebe2337c4e1399caf02",
         "config": {
             "pin": 5,
-            "val": true
+            "val": false
         },
         "id": "ae51dec6025f4b46d162b6bf2af84dc6eadc8c407fbf88eda4"
     }

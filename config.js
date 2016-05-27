@@ -123,7 +123,7 @@ exports.alertInputChange = function(id, type, value){
     }
 
     var info = {
-        url: 'https://' + node.server + '/api/input/' + id,
+        url: 'https://' + node.server + '/api/input/edit/' + id,
         form: { value: value, type: type },
         timeout: 10000,
         rejectUnhauthorized : false

@@ -18,7 +18,7 @@ function addOutput(outputConfig){
 
         if(outputConfig.driver instanceof Error){
             config.error('Output Driver Failure:', outputConfig.driver);
-            return;
+            return outputConfig.driver;
         }
 
         if(!outputConfig.id){ outputConfig.id = config.genId(); }
@@ -160,12 +160,14 @@ exports.addNewOutput = function(req, res){
             newOutput.name = '';
         }
 
-        if(newOutput = addOutput(newOutput)){
+        newOutput = addOutput(newOutput);
+
+        if(!(newOutput instanceof Error)){
             config.saveOutputs(outputs);
             return res.send(newOutput);
         }
 
-        return res.status(400).send("Error Adding Output");
+        return res.status(400).send(newOutput.message);
     }
 
     return res.status(400).send("Output configuration is incorrect!");
