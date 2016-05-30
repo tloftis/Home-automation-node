@@ -129,6 +129,8 @@ exports.alertInputChange = function(id, type, value){
         rejectUnhauthorized : false
     };
 
+	console.log(info.form);
+	
     request.post(info, function(err, resp, body){
         if(err){
             error('Error updating server with input ' + id + '!');

@@ -29,11 +29,11 @@ function digChange(pinConfig, funct){
 
         //just feed this function with the pins current state and it will fire and update if it had changed
         monitoredPins[pin].inter = function(now){
-            now = (+now === 1);
+            now = now ? 1 : 0;
 
-            if(+now !== +pinConfig.val){
+            if(now !== pinConfig.val){
                 for(var i = 0; i < monitoredPins[pin].functs.length; i++){
-                    monitoredPins[pin].functs[i](now);
+                    monitoredPins[pin].functs[i](now ? true : false);
                 }
 
                 pinConfig.val = now;
