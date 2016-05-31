@@ -128,8 +128,6 @@ exports.alertInputChange = function(id, type, value){
         timeout: 10000,
         rejectUnhauthorized : false
     };
-
-	console.log(info.form);
 	
     request.post(info, function(err, resp, body){
         if(err){
