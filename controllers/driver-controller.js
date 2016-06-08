@@ -31,7 +31,7 @@ function updateInputDrivers(){
 
     for(var i = 0; i < inputDriverLocs.length; i++){
         driver = require(inputDriverLocs[i].index);
-        config = require(inputDriverLocs[i].cofig);
+        config = require(inputDriverLocs[i].config);
 
         if(!config.id){
             config.id = master.genId();
