@@ -1,2 +1,5 @@
 node_modules/*
 npm-debug.log
+input-config.json
+output-config.json
+config.json

@@ -1,8 +1,8 @@
 {
-    "name": "Living Room Switch",
-    "location": "Downstairs, living room, south wall",
-    "description": "Node on the table",
-    "pinCount": 40,
-    "id": "20:7c:8f:48:17:9c",
-    "server": "10.0.0.2"
+    "name": "No Name",
+    "location": "Unknown",
+    "description": "New unconfigured node",
+    "pinCount": 26,
+    "id": "",
+    "server": ""
 }
