@@ -1,0 +1,6 @@
+{
+    "name": "Toggle Button",
+    "type": "boolean",
+    "description": "Outputs a value every second true value",
+    "id": "034c9b6d7957bee3c1fdab3e99f96145a881f3e2e6d6187b6d"
+}
