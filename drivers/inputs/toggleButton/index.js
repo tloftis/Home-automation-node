@@ -123,6 +123,10 @@ setup.prototype.updateConfig = function(config){
         }
     }
 
+    if(isDefined(config.onRise)){
+        _this.config.onRise = config.onRise ? true : false;
+    }
+
     return _this.config;
 };
 
