@@ -1,0 +1,6 @@
+{
+    "name": "RFID-RC522",
+    "type": "string",
+    "description": "This is an interface for the RFID-RC522 reader",
+    "id": ""
+}

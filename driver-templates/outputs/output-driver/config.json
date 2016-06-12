@@ -1,0 +1,6 @@
+{
+    "name": "Relay",
+    "type": "boolean",
+    "description": "This setups relays on the pi",
+    "id": "a4b47c131486e79da35190b3f964fe6ebe2337c4e1399caf02"
+}

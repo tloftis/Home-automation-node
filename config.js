@@ -12,7 +12,6 @@ var node = require(idConfigLoc),
     g = require('wiring-pi'),
     request = require('request'),
     chalk = require('chalk'),
-    extend = require('util')._extend,
     interfaces = os.networkInterfaces(),
     pinCount = (node.pinCount ? node.pinCount : 26),
     registeredPins = {};
