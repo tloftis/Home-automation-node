@@ -2,5 +2,5 @@
     "name": "RFID-RC522",
     "type": "string",
     "description": "This is an interface for the RFID-RC522 reader",
-    "id": ""
+    "id": "c5bfc67cdd52c7e056630d633e0f44aaad65aa20ed099db7f2"
 }

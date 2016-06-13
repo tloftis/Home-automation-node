@@ -18,12 +18,10 @@ var setup = function(config, listener) {
             return new Error('Required pin ' + pin + ' is being used by other hardware');
         }
     }
-
-    require("rc522/build/Release/rc522")(function(rfidSerialNumber){
+      
+    require("rc522")(function(rfidSerialNumber){
         listener(rfidSerialNumber);
     });
-
-    listener(_this.outputVal);
 };
 
 setup.prototype.updateConfig = function(config){
