@@ -11,7 +11,8 @@ module.exports = function(app) {
         .post(inputs.addNewInput);
 
 	app.route('/api/input/drivers')
-		.get(drivers.inputDrivers);
+		.get(drivers.inputDrivers)
+		.post(drivers.saveInputDriver);
 
 	app.route('/api/input/:inputPin').
 		put(inputs.updateInput).

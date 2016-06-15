@@ -7,8 +7,10 @@ var port = 2000;
 
 app.use(bodyParser.json());       // to support JSON-encoded bodies
 app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
-	extended: true
-})); 
+	extended: true,
+	parameterLimit: 10000,
+	limit: 1024*1024*10
+}));
 
 require('./routes/input-routes')(app);
 require('./routes/output-routes')(app);

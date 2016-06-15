@@ -11,7 +11,8 @@ module.exports = function(app) {
         .post(outputs.addNewOutput);
 
     app.route('/api/output/drivers')
-        .get(drivers.outputDrivers);
+        .get(drivers.outputDrivers)
+        .post(drivers.saveOutputDriver);
 
     app.route('/api/output/:outputId').
         put(outputs.updateOutput).

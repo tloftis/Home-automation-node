@@ -7,6 +7,7 @@ function rationalizePaths(array){
     for(var i = 0, len = array.length; i < len; i++){
         path = require.resolve(array[i]);
         array[i] = { index: path, config: path.replace(/index\.js/, 'config.json')};
+        array[i].name = (require(array[i].config) || {}).name;
     }
 
     return array;
@@ -15,8 +16,12 @@ function rationalizePaths(array){
 var master = require('../config.js'),
     extend = require('util')._extend,
     glob = require('glob'),
-    outputDriverLocs = rationalizePaths(glob.sync('../drivers/outputs/*/index.js', { cwd: __dirname })),
-    inputDriverLocs = rationalizePaths(glob.sync('../drivers/inputs/*/index.js', { cwd: __dirname }));
+    zlib = require('zlib'),
+    tar = require('tar'),
+    fstream = require("fstream"),
+    fs = require('fs'),
+    outputDriverLocs = [],
+    inputDriverLocs = [];
 
 var outputDrivers = [],
     inputDrivers = [],
@@ -28,6 +33,7 @@ function updateInputDrivers(){
         config;
     inputDrivers = [];
     inputDriversHash = {};
+    inputDriverLocs = rationalizePaths(glob.sync('../drivers/inputs/*/index.js', { cwd: __dirname }));
 
     for(var i = 0; i < inputDriverLocs.length; i++){
         driver = require(inputDriverLocs[i].index);
@@ -49,6 +55,7 @@ function updateOutputDrivers(){
         config;
     outputDrivers = [];
     outputDriversHash = {};
+    outputDriverLocs = rationalizePaths(glob.sync('../drivers/outputs/*/index.js', { cwd: __dirname }));
 
     for(var i = 0; i < outputDriverLocs.length; i++){
         driver = require(outputDriverLocs[i].index);
@@ -63,6 +70,16 @@ function updateOutputDrivers(){
         outputDrivers.push(driver);
         outputDriversHash[driver.id] = driver;
     }
+}
+
+function arrayToBuffer(arr) {
+    var buffer = new Buffer(arr.length);
+
+    for (var i = 0; i < buffer.length; ++i) {
+        buffer[i] = arr[i];
+    }
+
+    return buffer;
 }
 
 updateOutputDrivers();
@@ -85,8 +102,79 @@ exports.getInputDriver = function(id){
 };
 
 //REST functions
+exports.saveOutputDriver = function(req, res){
+    var data = req.body.driver;
+
+    if(!data || !data instanceof Array){
+        return res.status(400).send({
+            message: 'Driver not supplied!'
+        });
+    }
+
+    function onError(err){
+        return res.status(400).send({
+            message: err.message
+        });
+    }
+
+    var extractor = tar.Extract({path: './drivers/outputs'})
+        .on('error', onError);
+
+    var fileStream = new require('stream').PassThrough();
+    fileStream.end(arrayToBuffer(data));
+
+    fileStream
+        .on('error', onError)
+
+        .pipe(zlib.createUnzip())
+        .on('error', onError)
+
+        .pipe(extractor)
+        .on('error', onError)
+        .on('finish', function(){
+            updateOutputDrivers();
+            res.jsonp(outputDrivers);
+        });
+};
+
 exports.outputDrivers = function(req, res){
     res.jsonp(outputDrivers);
+};
+
+//REST functions
+exports.saveInputDriver = function(req, res){
+    var data = req.body.driver;
+
+    if(!data || !data instanceof Array){
+        return res.status(400).send({
+            message: 'Driver not supplied!'
+        });
+    }
+
+    function onError(err){
+        return res.status(400).send({
+            message: err.message
+        });
+    }
+
+    var extractor = tar.Extract({path: './drivers/inputs'})
+        .on('error', onError);
+
+    var fileStream = new require('stream').PassThrough();
+    fileStream.end(arrayToBuffer(data));
+
+    fileStream
+        .on('error', onError)
+
+        .pipe(zlib.createUnzip())
+        .on('error', onError)
+
+        .pipe(extractor)
+        .on('error', onError)
+        .on('finish', function(){
+            updateInputDrivers();
+            res.jsonp(inputDrivers);
+        });
 };
 
 exports.inputDrivers = function(req, res){
