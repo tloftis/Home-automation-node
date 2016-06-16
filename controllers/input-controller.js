@@ -13,6 +13,11 @@ function isDefined(val){
 function addInput(inputConfig){
     var driver = driverController.getInputDriver(inputConfig.driverId);
 
+    if(driver.notReady){
+        config.error('Input Driver Not Ready:', driver);
+        return;
+    }
+
     if(driver){
         if(!inputConfig.id){ inputConfig.id = config.genId(); }
 
@@ -68,6 +73,10 @@ function updateConfig(oldConfig, newConfig){
     if(isDefined(newConfig.config)){
         var drive = driverController.getInputDriver(newConfig.driverId);
 
+        if(drive.notReady){
+            return;
+        }
+
         if(drive){
             for(var key in newConfig.config){
                 if(drive.config[key].type === 'boolean'){
@@ -90,6 +99,10 @@ function updateConfig(oldConfig, newConfig){
 
     if(isDefined(newConfig.driverId) && (newConfig.driverId !== oldConfig.driverId)){
         var newDriver = driverController.getInputDriver(newConfig.driverId);
+
+        if(newDriver.notReady){
+            return;
+        }
 
         if(newDriver && isDefined(newConfig.config)){
             oldConfig.driver.destroy();

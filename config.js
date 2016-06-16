@@ -9,7 +9,6 @@ var node = require(idConfigLoc),
     fs = require('fs'),
     os = require('os'),
     crypto = require('crypto'),
-    g = require('wiring-pi'),
     request = require('request'),
     chalk = require('chalk'),
     interfaces = os.networkInterfaces(),
@@ -77,9 +76,6 @@ function updateNode(newConfig){
     info('Updated node config: ' + node.name + ', location:' + node.location);
     return true;
 }
-
-g.setup('gpio');
-exports.gpio = g;
 
 exports.getId = function(){
     return node.id;

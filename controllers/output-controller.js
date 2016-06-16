@@ -13,6 +13,10 @@ function isDefined(val){
 function addOutput(outputConfig){
     var driver = driverController.getOutputDriver(outputConfig.driverId);
 
+    if(driver.notReady){
+        return;
+    }
+
     if(driver){
         outputConfig.driver = new driver.setup(outputConfig.config);
 
@@ -66,6 +70,10 @@ function updateConfig(oldConfig, newConfig){
     if(isDefined(newConfig.config)){
         var drive = driverController.getOutputDriver(newConfig.driverId);
 
+        if(driver.notReady){
+            return;
+        }
+
         if(drive){
             for(var key in newConfig.config){
                 if(drive.config[key].type === 'boolean'){
@@ -88,6 +96,10 @@ function updateConfig(oldConfig, newConfig){
 
     if(isDefined(newConfig.driverId) && (newConfig.driverId !== oldConfig.driverId)){
         var newDriver = driverController.getOutputDriver(newConfig.driverId);
+
+        if(newDriver.notReady){
+            return;
+        }
 
         if(newDriver && isDefined(newConfig.config)){
             oldConfig.driver.destroy();

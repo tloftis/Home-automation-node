@@ -1,9 +1,11 @@
 'use strict';
 
 var master = require('../../../config.js');
+var gpio = require('wiring-pi');
+gpio.setup('gpio');
 
 function set(pin, newVal){
-    master.gpio.digitalWrite(+pin.pin, +newVal);
+    gpio.digitalWrite(+pin.pin, +newVal);
 }
 
 function isNumber(val){
@@ -40,7 +42,7 @@ var setup = function(config) {
         return new Error('Unable to register on specified pin');
     }
 
-    master.gpio.pinMode(config.pin, master.gpio.OUTPUT);
+    gpio.pinMode(config.pin, gpio.OUTPUT);
     _this.config = {};
     _this.config.pin = config.pin;
     _this.set(config.val); //Sets the this.config.val

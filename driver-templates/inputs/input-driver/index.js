@@ -1,6 +1,8 @@
 'use strict';
 
 var master = require('../../../config.js');
+var gpio = require('wiring-pi');
+gpio.setup('gpio');
 
 //This Defines the configuration
 exports.config = {
@@ -39,7 +41,7 @@ var setup = function(config, listener) {
 	//A pin needs to be registerd before use, this prevents multi driver pins causing chaos
 	if(master.registerPin(config.pin)){
 		_this.config.pin = config.pin;
-		master.gpio.pinMode(config.pin, master.gpio.INPUT);
+		gpio.pinMode(config.pin, gpio.INPUT);
 		_this.listener = digChange(this.config, _this.listener()); //This sets the val property of this.config
 	}else{
 		return;
