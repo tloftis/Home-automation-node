@@ -72,16 +72,6 @@ function updateOutputDrivers(){
     }
 }
 
-function arrayToBuffer(arr) {
-    var buffer = new Buffer(arr.length);
-
-    for (var i = 0; i < buffer.length; ++i) {
-        buffer[i] = arr[i];
-    }
-
-    return buffer;
-}
-
 updateOutputDrivers();
 updateInputDrivers();
 
@@ -103,14 +93,6 @@ exports.getInputDriver = function(id){
 
 //REST functions
 exports.saveOutputDriver = function(req, res){
-    var data = req.body.driver;
-
-    if(!data || !data instanceof Array){
-        return res.status(400).send({
-            message: 'Driver not supplied!'
-        });
-    }
-
     function onError(err){
         return res.status(400).send({
             message: err.message
@@ -120,15 +102,10 @@ exports.saveOutputDriver = function(req, res){
     var extractor = tar.Extract({path: './drivers/outputs'})
         .on('error', onError);
 
-    var fileStream = new require('stream').PassThrough();
-    fileStream.end(arrayToBuffer(data));
-
-    fileStream
+    req
         .on('error', onError)
-
         .pipe(zlib.createUnzip())
         .on('error', onError)
-
         .pipe(extractor)
         .on('error', onError)
         .on('finish', function(){
@@ -143,14 +120,6 @@ exports.outputDrivers = function(req, res){
 
 //REST functions
 exports.saveInputDriver = function(req, res){
-    var data = req.body.driver;
-
-    if(!data || !data instanceof Array){
-        return res.status(400).send({
-            message: 'Driver not supplied!'
-        });
-    }
-
     function onError(err){
         return res.status(400).send({
             message: err.message
@@ -160,10 +129,7 @@ exports.saveInputDriver = function(req, res){
     var extractor = tar.Extract({path: './drivers/inputs'})
         .on('error', onError);
 
-    var fileStream = new require('stream').PassThrough();
-    fileStream.end(arrayToBuffer(data));
-
-    fileStream
+    req
         .on('error', onError)
 
         .pipe(zlib.createUnzip())
