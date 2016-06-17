@@ -13,9 +13,9 @@ function isDefined(val){
 function addInput(inputConfig){
     var driver = driverController.getInputDriver(inputConfig.driverId);
 
-    if(driver.notReady){
+    if((driver || {}).notReady){
         config.error('Input Driver Not Ready:', driver);
-        return;
+        return false;
     }
 
     if(driver){

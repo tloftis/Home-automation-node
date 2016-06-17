@@ -21,6 +21,5 @@ module.exports = function(app) {
     app.route('/api/output/:outputId/set')
         .post(outputs.set);
 
-    // Finish by binding the user middleware
     app.param('outputId', outputs.getOutputById);
 };

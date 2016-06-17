@@ -13,7 +13,7 @@ function isDefined(val){
 function addOutput(outputConfig){
     var driver = driverController.getOutputDriver(outputConfig.driverId);
 
-    if(driver.notReady){
+    if((driver || {}).notReady){
         return;
     }
 

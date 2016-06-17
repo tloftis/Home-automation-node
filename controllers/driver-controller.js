@@ -40,6 +40,7 @@ function updateInputDrivers(call){
 
     inputDriverLocs.forEach(function(inDriver){
         driver = require(inDriver.config);
+        driver.dir = inDriver.config.replace(/config\.json/, '');
 
         if(!driver.id){
             driver.id = master.genId();
@@ -98,6 +99,7 @@ function updateOutputDrivers(call){
 
     outputDriverLocs.forEach(function(outDriver){
         driver = require(outDriver.config);
+        driver.dir = outDriver.config.replace(/config\.json/, '');
 
         if(!driver.id){
             driver.id = master.genId();
@@ -164,6 +166,27 @@ exports.getInputDriver = function(id){
     return inputDriversHash[id];
 };
 
+function deleteDriver(driver, callback){
+    rmdirAsync(driver.dir, function(err){
+        if(!err){
+            var index = inputDrivers.indexOf(driver);
+
+            if(index !== -1){
+                inputDrivers.splice(index, 1);
+                delete inputDriversHash[driver.id];
+            }else{
+                index = outputDrivers.indexOf(driver);
+                if(index !== -1){ outputDrivers.splice(index, 1); }
+                delete outputDriversHash[driver.id];
+            }
+        }
+
+        if(callback){ callback(err); }
+    });
+}
+
+exports.deleteDriver = deleteDriver;
+
 //REST functions
 exports.saveOutputDriver = function(req, res){
     function onError(err){
@@ -216,8 +239,80 @@ exports.saveInputDriver = function(req, res){
         });
 };
 
+exports.removeDriver = function(req, res){
+    var driver = req.driver;
+
+    deleteDriver(driver, function(err){
+        if(!err){
+            return res.jsonp(driver);
+        }
+
+        return res.status(400).send({
+            message: 'Error deleting Driver : ' + err.message
+        });
+    });
+};
+
 exports.inputDrivers = function(req, res){
     res.jsonp(inputDrivers);
+};
+
+exports.driverById = function(req, res, next, id){
+    if (!id) {
+        return res.status(400).send({
+            message: 'Driver id is invalid'
+        });
+    }
+
+    req.driver = outputDriversHash[id] || inputDriversHash[id];
+
+    if (!req.driver) {
+        return res.status(400).send({
+            message: 'Driver not found'
+        });
+    }
+
+    next();
+};
+var rmdirAsync = function(path, callback) {
+    fs.readdir(path, function(err, files) {
+        if(err) {
+            // Pass the error on to callback
+            callback(err, []);
+            return;
+        }
+        var wait = files.length,
+            count = 0,
+            folderDone = function(err) {
+                count++;
+                // If we cleaned out all the files, continue
+                if( count >= wait || err) {
+                    fs.rmdir(path,callback);
+                }
+            };
+        // Empty directory to bail early
+        if(!wait) {
+            folderDone();
+            return;
+        }
+
+        // Remove one or more trailing slash to keep from doubling up
+        path = path.replace(/\/+$/,"");
+        files.forEach(function(file) {
+            var curPath = path + "/" + file;
+            fs.lstat(curPath, function(err, stats) {
+                if( err ) {
+                    callback(err, []);
+                    return;
+                }
+                if( stats.isDirectory() ) {
+                    rmdirAsync(curPath, folderDone);
+                } else {
+                    fs.unlink(curPath, folderDone);
+                }
+            });
+        });
+    });
 };
 
 return exports;
