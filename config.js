@@ -53,6 +53,10 @@ function writeConfig(fileLoc, obj, callback){
 
     var objStr = JSON.stringify(obj, null, 4);
 
+    if(!objStr){
+        return callback(new Error('Missing config data'));
+    }
+
     fs.writeFile(fileLoc, objStr, function(err) {
         callback(err);
     });
