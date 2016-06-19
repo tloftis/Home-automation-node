@@ -70,7 +70,7 @@ function updateConfig(oldConfig, newConfig){
     if(isDefined(newConfig.config)){
         var drive = driverController.getOutputDriver(newConfig.driverId);
 
-        if(driver.notReady){
+        if(drive.notReady){
             return;
         }
 
