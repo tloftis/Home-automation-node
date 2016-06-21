@@ -108,7 +108,7 @@ function updateConfig(oldConfig, newConfig){
             oldConfig.driver.destroy();
 
             oldConfig.driver = new newDriver.setup(newConfig.config, function(val){
-                config.alertInputChange(oldConfig.id, oldConfig.driver.type, val);
+                config.alertInputChange(oldConfig.id, newDriver.type, val);
             });
 
             oldConfig.driverId = newConfig.driverId;
