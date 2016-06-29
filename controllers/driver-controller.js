@@ -32,7 +32,7 @@ var outputDrivers = [],
 function updateInputDrivers(call){
     var driver,
         packages = {},
-        dirs = fs.readdirSync('node_modules');
+        dirs = fs.readdirSync(rootDir + '/node_modules');
 
     inputDrivers = [];
     inputDriversHash = {};
@@ -91,7 +91,7 @@ function updateInputDrivers(call){
 function updateOutputDrivers(call){
     var driver,
         packages = {},
-        dirs = fs.readdirSync('node_modules');
+        dirs = fs.readdirSync(rootDir + '/node_modules');
 
     outputDrivers = [];
     outputDriversHash = {};
