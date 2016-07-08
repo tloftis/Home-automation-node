@@ -75,6 +75,8 @@ function updateInputDrivers(){
     inputDriverLocs = rationalizePaths(glob.sync('../drivers/inputs/*/index.js', { cwd: __dirname }));
 
     inputDriverLocs.forEach(function(inDriver){
+        allInstalled = true;
+
         driver = require(inDriver.config);
         driver.dir = inDriver.config.replace(/config\.json/, '');
 
@@ -113,6 +115,8 @@ function updateOutputDrivers(){
     outputDriverLocs = rationalizePaths(glob.sync('../drivers/outputs/*/index.js', { cwd: __dirname }));
 
     outputDriverLocs.forEach(function(outDriver){
+        allInstalled = true;
+
         driver = require(outDriver.config);
         driver.dir = outDriver.config.replace(/config\.json/, '');
 
