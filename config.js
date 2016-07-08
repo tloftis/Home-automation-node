@@ -19,9 +19,9 @@ for(var i = 1; i <= pinCount; i++){
     registeredPins[i] = false;
 }
 
-var error = function(str, obj) { console.log(chalk.bold.red(str), obj); },
-    info = function(str, obj) { console.log(chalk.blue.bold.underline(str), obj); },
-    success = function(str, obj) { console.log(chalk.green.bold(str), obj); };
+var error = function(str, obj) { console.log(chalk.bold.red(str), obj || ''); },
+    info = function(str, obj) { console.log(chalk.blue.bold.underline(str), obj || ''); },
+    success = function(str, obj) { console.log(chalk.green.bold(str), obj || ''); };
 
 var types = {
     number: typeof 1,
@@ -141,6 +141,23 @@ exports.alertInputChange = function(id, type, value){
     });
 };
 
+exports.requestServerUpdate = function(id, type, value){
+    var info = {
+        url: 'https://' + node.server + '/api/node/' + node.id,
+        form: { },
+        timeout: 10000,
+        rejectUnhauthorized : false
+    };
+
+    request.post(info, function(err, resp, body){
+        if(err){
+            error('Error talking to the server  "' + node.server || 'Unregistered' + '"!');
+        }else{
+            success('Updated the server with the current configuration!');
+        }
+    });
+};
+
 exports.getServer = function(){
     return node.server;
 };
@@ -207,6 +224,12 @@ exports.serverInfo = function(req, res){
 
 exports.genId = function(){
     return crypto.randomBytes(25).toString('hex');
+};
+
+exports.reset = function(){
+    process.send({
+        command: 'reset'
+    });
 };
 
 exports.types = types;

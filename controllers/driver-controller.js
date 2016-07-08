@@ -20,18 +20,54 @@ var master = require('../config.js'),
     tar = require('tar'),
     fs = require('fs'),
     async = require('async'),
-    npmExec = require('child_process').exec,
     outputDriverLocs = [],
     inputDriverLocs = [];
 
 var outputDrivers = [],
     inputDrivers = [],
     outputDriversHash = {},
-    inputDriversHash = {};
+    inputDriversHash = {},
+    packCount = 0,
+    totalPackCount = 0,
+    totalErrorPackCount = 0,
+    installingPacks = {};
 
-function updateInputDrivers(call){
+var npmExec = function(pack){
+    if(installingPacks[pack]){
+        return;
+    }
+
+    installingPacks[pack] = true;
+    totalPackCount++;
+    packCount++;
+    master.info('Installing NPM package ' + pack);
+
+    require('child_process').exec('npm install ' + pack, function(err, std, str){
+        packCount--;
+
+        if(err){
+            master.error('Failed installing ' + pack, err);
+            totalErrorPackCount++;
+        }else if(str.indexOf('npm ERR!') !== -1){
+            master.error('Error installing ' + pack, str);
+            totalErrorPackCount++;
+        }else{
+            master.success('NPM Package ' + pack + ' Installed!');
+        }
+
+
+        if(!packCount){
+            if(!totalErrorPackCount || totalErrorPackCount !== totalPackCount){
+                master.reset();
+            }
+        }
+    })
+};
+
+function updateInputDrivers(){
     var driver,
         packages = {},
+        allInstalled = true,
         dirs = fs.readdirSync(rootDir + '/node_modules');
 
     inputDrivers = [];
@@ -47,50 +83,29 @@ function updateInputDrivers(call){
             master.writeConfig(inDriver.config, driver);
         }
 
-        driver.notReady = 0;
-        inputDrivers.push(driver);
-        inputDriversHash[driver.id] = driver;
-
         (driver.packages instanceof Array ? driver.packages : []).forEach(function(pack){
-            if(dirs.indexOf(pack)=== -1){
-                driver.notReady++;
-
-                if(packages[pack]){
-                    packages[pack].push(driver);
-                }else{
-                    packages[pack] = [driver];
-                }
+            if(dirs.indexOf(pack) === -1){
+                packages[pack] = true;
+                allInstalled = false;
             }
         });
 
-        if(!driver.notReady){
+        if(allInstalled){
+            inputDrivers.push(driver);
+            inputDriversHash[driver.id] = driver;
             extend(driver, require(inDriver.index));
-        }else{
-            driver.tempIndex = inDriver.index;
         }
     });
 
-    async.each(Object.keys(packages), function(pack, finish){
-        npmExec('npm install ' + pack, function(err, std, str){
-            packages[pack].forEach(function(driver){
-                driver.notReady--;
-
-                if(!driver.notReady){
-                    extend(driver, require(driver.tempIndex));
-                    delete driver.tempIndex;
-                }
-            });
-
-            finish();
-        });
-    }, function(){
-        if(call){ call(); }
+    Object.keys(packages).forEach(function(pack){
+        npmExec(pack);
     });
 }
 
-function updateOutputDrivers(call){
+function updateOutputDrivers(){
     var driver,
         packages = {},
+        allInstalled = true,
         dirs = fs.readdirSync(rootDir + '/node_modules');
 
     outputDrivers = [];
@@ -106,44 +121,22 @@ function updateOutputDrivers(call){
             master.writeConfig(outDriver.config, driver);
         }
 
-        driver.notReady = 0;
-        outputDrivers.push(driver);
-        outputDriversHash[driver.id] = driver;
-
         (driver.packages instanceof Array ? driver.packages : []).forEach(function(pack){
             if(dirs.indexOf(pack)=== -1){
-                driver.notReady++;
-
-                if(packages[pack]){
-                    packages[pack].push(driver);
-                }else{
-                    packages[pack] = [driver];
-                }
+                packages[pack] = true;
+                allInstalled = false;
             }
         });
 
-        if(!driver.notReady){
+        if(allInstalled){
+            outputDrivers.push(driver);
+            outputDriversHash[driver.id] = driver;
             extend(driver, require(outDriver.index));
-        }else{
-            driver.tempIndex = outDriver.index;
         }
     });
 
-    async.each(Object.keys(packages), function(pack, finish){
-        npmExec('npm install ' + pack, function(err, std, str){
-            packages[pack].forEach(function(driver){
-                driver.notReady--;
-
-                if(!driver.notReady){
-                    extend(driver, require(driver.tempIndex));
-                    delete driver.tempIndex;
-                }
-            });
-
-            finish();
-        });
-    }, function(){
-        if(call){ call(); }
+    Object.keys(packages).forEach(function(pack){
+        npmExec(pack);
     });
 }
 

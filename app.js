@@ -1,23 +1,61 @@
 'use strict';
+var cp = require('child_process');
 
-var app = require('express')();
-var bodyParser = require('body-parser');
-var config = require('./config.js');
-var port = 2000;
+if(typeof v8debug === 'object'){
+	process.execArgv = ['--debug-brk=' + (--debugPort), '--nolazy'];
+}
 
-global.rootDir = __dirname;
+var child, setupTimeout;
 
-app.use(bodyParser.json());       // to support JSON-encoded bodies
-app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
-	extended: true,
-	parameterLimit: 10000,
-	limit: 1024*1024*10
-}));
+function setupApp(){
+	child = cp.fork(require.resolve('./node.js'));
 
-require('./routes/input-routes')(app);
-require('./routes/output-routes')(app);
-require('./routes/register-server.routes')(app);
+	child.on('message', function(data) {
+		if((data || {}).command){
+			if(data.command === 'reset'){
+				killApp();
+				setupApp();
+			}
+		}
+	});
 
-app.listen(port, function(){
-	console.log('Server up and running!');
-});
+	//If the process is killed by any random process this will restart it.
+	child.on('close', function(){
+		if(setupTimeout){
+			clearTimeout(setupTimeout);
+			setupTimeout = false;
+		}
+
+		setupTimeout = setTimeout(function(){
+			setupApp();
+			setupTimeout = false;
+		}, 2000);
+	});
+
+	//If anything fails with the child, immediately kill and restart it
+	child.on('error', function(err){
+		killApp();
+		console.log('Error Occurred in app, Restarting in 5 seconds!');
+
+		if(setupTimeout){
+			clearTimeout(setupTimeout);
+			setupTimeout = false;
+		}
+
+		setupTimeout = setTimeout(function(){
+			setupApp();
+			setupTimeout = false;
+		}, 5000);
+	});
+}
+
+function killApp(){
+	if(child){
+		child.removeAllListeners('close');
+		child.removeAllListeners('message');
+		child.removeAllListeners('error');
+		child.kill();
+	}
+}
+
+setupApp();

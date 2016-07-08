@@ -17,9 +17,5 @@
     "glob": "^7.0.3",
     "request": "^2.69.0",
     "tar": "^2.2.1"
-  },
-  "optionalDependencies": {
-    "rc522": "^0.1.2",
-    "wiring-pi": "^2.1.1"
   }
 }
