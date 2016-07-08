@@ -166,6 +166,7 @@ exports.getInputDriver = function(id){
 function deleteDriver(driver, callback){
     rmdirAsync(driver.dir, function(err){
         if(!err){
+            master.success('Driver ' + driver.name + ' deleted successfully!', driver);
             var index = inputDrivers.indexOf(driver);
 
             if(index !== -1){
@@ -176,6 +177,8 @@ function deleteDriver(driver, callback){
                 if(index !== -1){ outputDrivers.splice(index, 1); }
                 delete outputDriversHash[driver.id];
             }
+        }else{
+            master.error('Error attempting to delete driver!', err);
         }
 
         if(callback){ callback(err); }

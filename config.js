@@ -53,7 +53,7 @@ function writeConfig(fileLoc, obj, callback){
 
     var objStr = JSON.stringify(obj, null, 4);
 
-    if(!objStr){
+    if(!objStr.trim()){
         return callback(new Error('Missing config data'));
     }
 
@@ -180,7 +180,7 @@ exports.saveInputs = function(inputs){
         return newObj;
     });
 
-    writeConfig(inputConfigLoc, strippedInputs);
+    writeConfig(inputConfigLoc, strippedInputs|| []);
 };
 
 exports.saveOutputs = function(outputs){
@@ -197,7 +197,7 @@ exports.saveOutputs = function(outputs){
         return newObj;
     });
 
-    writeConfig(outputConfigLoc, strippedOutputs);
+    writeConfig(outputConfigLoc, strippedOutputs || []);
 };
 
 exports.writeConfig = writeConfig;
