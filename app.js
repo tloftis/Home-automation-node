@@ -1,5 +1,21 @@
 'use strict';
 var cp = require('child_process');
+var Wireless = require('wireless');
+
+var wireless = new Wireless({
+    iface: 'wlan0',
+    updateFrequency: 10, // Optional, seconds to scan for networks
+    connectionSpyFrequency: 2, // Optional, seconds to scan if connected
+    vanishThreshold: 2 // Optional, how many scans before network considered gone
+});
+
+var reset = function(callback){
+    wireless.disable(function(err){
+        wireless.enable(function(err){
+            if(callback){ callback(err); }
+        });
+    });
+}
 
 if(typeof v8debug === 'object'){
 	process.execArgv = ['--debug-brk=' + (--debugPort), '--nolazy'];
@@ -15,6 +31,10 @@ function setupApp(){
 			if(data.command === 'reset'){
 				killApp();
 				setupApp();
+			}
+
+			if(data.command === 'reconnect'){
+				reset();
 			}
 		}
 	});

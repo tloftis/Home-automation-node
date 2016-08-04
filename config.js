@@ -131,6 +131,7 @@ exports.alertInputChange = function(id, type, value){
     request.post(info, function(err, resp, body){
         if(err){
             error('Error updating server with input ' + id + '!');
+            exports.reconnect();
         }
 
         busy = false;
@@ -152,6 +153,7 @@ exports.requestServerUpdate = function(id, type, value){
     request.post(info, function(err, resp, body){
         if(err){
             error('Error talking to the server  "' + node.server || 'Unregistered' + '"!');
+            exports.reconnect();
         }else{
             success('Updated the server with the current configuration!');
         }
@@ -229,6 +231,12 @@ exports.genId = function(){
 exports.reset = function(){
     process.send({
         command: 'reset'
+    });
+};
+
+exports.reconnect = function(){
+    process.send({
+        command: 'reconnect'
     });
 };
 
