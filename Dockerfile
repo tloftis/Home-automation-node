@@ -26,6 +26,7 @@ RUN curl https://deb.nodesource.com/setup_5.x --insecure | /bin/bash; \
     rm -rf /var/lib/apt/lists/*
 
 RUN cd /root/node; \
+    rm -r node_modules; \
     npm install
 
 # Define working directory

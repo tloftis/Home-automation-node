@@ -1,8 +1,8 @@
 'use strict';
 
 //Configuration File Locations
-var inputConfigLoc = './input-config.json',
-    outputConfigLoc = './output-config.json',
+var inputConfigLoc = './data/input-config.json',
+    outputConfigLoc = './data/output-config.json',
     idConfigLoc = './config.json';
 
 var node = require(idConfigLoc),
