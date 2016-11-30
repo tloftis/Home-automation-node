@@ -8,8 +8,9 @@ docker run \
 	--device /dev/ttyAMA0:/dev/ttyAMA0 \
 	--privileged \
 	--name node \
+        -v /root/Home-automation-node/drivers:/root/node/drivers/ \
 	-v /root/Home-automation-node/data:/root/node/data/ \
-	-d \
+	-ti \
 	-p 2000:2000 \
-	6222 \
-	node /root/node/app.js
+	node \
+	/bin/bash #node /root/node/app.js
