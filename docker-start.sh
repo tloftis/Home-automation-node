@@ -7,8 +7,9 @@ docker run \
 	--device /dev/mem:/dev/mem \
 	--device /dev/ttyAMA0:/dev/ttyAMA0 \
 	--privileged \
+	--name node \
 	-v /root/Home-automation-node/data:/root/node/data/ \
-	-ti \
+	-d \
 	-p 2000:2000 \
-	2144412d2673 \
-	/bin/bash #node /root/node/app.js
+	6222 \
+	node /root/node/app.js
