@@ -3,7 +3,7 @@
 //Configuration File Locations
 var inputConfigLoc = './data/input-config.json',
     outputConfigLoc = './data/output-config.json',
-    idConfigLoc = './config.json';
+    idConfigLoc = './data/config.json';
 
 var node = require(idConfigLoc),
     fs = require('fs'),

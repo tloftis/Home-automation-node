@@ -1,7 +1,7 @@
 'use strict';
 
 var config = require('../config.js'),
-    outputConfigs = require('../output-config.json'),
+    outputConfigs = require('../data/output-config.json'),
     driverController = require('./driver-controller.js'),
     outputsHash = {},
     outputs = [];

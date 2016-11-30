@@ -1,7 +1,7 @@
 'use strict';
 
 var config = require('../config.js'),
-    inputConfigs = require('../input-config.json'),
+    inputConfigs = require('../data/input-config.json'),
     driverController = require('./driver-controller.js'),
     inputsHash = {},
     inputs = [];

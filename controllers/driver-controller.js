@@ -19,6 +19,7 @@ var master = require('../config.js'),
     zlib = require('zlib'),
     tar = require('tar'),
     fs = require('fs'),
+    path = require('path'),
     async = require('async'),
     outputDriverLocs = [],
     inputDriverLocs = [];
@@ -32,6 +33,8 @@ var outputDrivers = [],
     totalErrorPackCount = 0,
     installingPacks = {};
 
+var npmFolder = path.normalize(rootDir + '/node_modules');
+
 var npmExec = function(pack){
     if(installingPacks[pack]){
         return;
@@ -42,7 +45,7 @@ var npmExec = function(pack){
     packCount++;
     master.info('Installing NPM package ' + pack);
 
-    require('child_process').exec('npm install ' + pack, function(err, std, str){
+    require('child_process').exec('npm install ' + pack + ' --prefix ' + rootDir, function(err, std, str){
         packCount--;
 
         if(err){
@@ -68,7 +71,7 @@ function updateInputDrivers(){
     var driver,
         packages = {},
         allInstalled = true,
-        dirs = fs.readdirSync(rootDir + '/node_modules');
+        dirs = fs.readdirSync(npmFolder);
 
     inputDrivers = [];
     inputDriversHash = {};
@@ -108,7 +111,7 @@ function updateOutputDrivers(){
     var driver,
         packages = {},
         allInstalled = true,
-        dirs = fs.readdirSync(rootDir + '/node_modules');
+        dirs = fs.readdirSync(npmFolder);
 
     outputDrivers = [];
     outputDriversHash = {};
