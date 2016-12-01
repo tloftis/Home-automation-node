@@ -1,1 +1,1 @@
-docker build -t "node" .
+docker build -t "node" Dockerfile-x86 .

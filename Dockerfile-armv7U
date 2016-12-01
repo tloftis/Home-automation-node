@@ -1,6 +1,3 @@
-#FROM debian:jessie 
-#For most systems
-
 FROM resin/rpi-raspbian:jessie
 #For Raspberry PI
 

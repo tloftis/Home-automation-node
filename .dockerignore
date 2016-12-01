@@ -1,0 +1,12 @@
+node_modules/*
+Dockerfile*
+docker-*
+install-docker.sh
+README.md
+data/*
+drivers/*
+.git/*
+.gitignore
+.idea/*
+npm-debug.log
+wiring-pi-mock/*
