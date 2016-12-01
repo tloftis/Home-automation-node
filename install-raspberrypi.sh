@@ -5,3 +5,13 @@ systemctl unmask docker.service
 systemctl unmask docker.socket
 systemctl start docker.service
 service docker start
+
+if $(uname -m | grep -Eq ^armv6); then
+	cat ./docker-build-armv6.sh | /bin/bash
+else
+	cat ./docker-build-armv7U.sh | /bin/bash
+fi
+
+cat docker-start.sh | /bin/bash
+
+echo "/etc/init.d/docker start" > /etc/rc.local

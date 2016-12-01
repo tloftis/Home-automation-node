@@ -1,1 +1,1 @@
-docker build -t "node" -f Dockerfile-armv7U .
+docker build -t "node" --file Dockerfile-armv7U .

@@ -1,1 +1,1 @@
-docker build -t "node" -f Dockerfile-armv6 .
+docker build -t "node" --file Dockerfile-armv6 .

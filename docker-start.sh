@@ -12,5 +12,6 @@ docker run \
 	-v $(pwd)/data:/root/node/data/ \
 	-d \
 	-p 2000:2000 \
+	--restart=unless-stopped \
 	node \
 	node /root/node/app.js
