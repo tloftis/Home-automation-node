@@ -14,6 +14,7 @@ RUN apt-get update; \
 
 COPY . /root/node
 
+#Install LIRC, it is a IR interface lib, this sets it up for RPI GPIO Interface
 RUN echo "lirc_dev" >> /etc/modules; \
     echo "lirc_rpi gpio_in_pin=23 gpio_out_pin=22" >> /etc/modules; \
     /bin/mkdir -p /etc/lirc/; \
@@ -27,17 +28,12 @@ RUN apt-get update; \
     apt-get install nodejs npm -y --no-install-recommends; \
     rm -rf /var/lib/apt/lists/*; \
     curl http://node-arm.herokuapp.com/node_latest_armhf.deb > node_latest_armhf.deb; \ 
-    dpkg -i node_latest_armhf.deb
+    dpkg -i node_latest_armhf.deb; \
+    rm -rf node_latest_armhf.deb
 
+#Remove any stragling files that may exist from the copy, npm install requirements
 RUN cd /root/node; \
     rm -rf node_modules; \
     rm -rf drivers; \
     rm -rf data; \
     npm install
-
-# Define working directory
-#WORKDIR /root/node
-#VOLUME /root/node
-
-# Define default command
-CMD ["bash"]

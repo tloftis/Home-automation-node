@@ -7,11 +7,11 @@ systemctl start docker.service
 service docker start
 
 if $(uname -m | grep -Eq ^armv6); then
-	cat ./docker-build-armv6.sh | /bin/bash
+	./docker-build-armv6.sh
 else
-	cat ./docker-build-armv7U.sh | /bin/bash
+	./docker-build-armv7U.sh
 fi
 
-cat docker-start.sh | /bin/bash
+./docker-start.sh
 
-echo "/etc/init.d/docker start" > /etc/rc.local
+echo "service docker start" > /etc/rc.local

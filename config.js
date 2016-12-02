@@ -43,7 +43,7 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 for (var j in interfaces) {
     for (i in interfaces[j]) {
         var address = interfaces[j][i];
-
+        
         if (address.family === 'IPv4' && !address.internal) {
             node.id = address.mac;
         }
