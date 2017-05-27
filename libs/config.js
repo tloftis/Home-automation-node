@@ -1,4 +1,11 @@
 'use strict';
+//TODO: fix id grabbing method and how config locations are passed in
+//TODO: Seprate out functions to new lib files to make them more module like and not monolithic
+//TODO: there exist an error where configs get erased, and I am not sure how, seems like it should be impossible, but somehow it is
+//TODO: Either fix up how the mac address is gotten, or most likely drop it and go with a unique hash like the ids for inputs/outputs
+//TODO: Just better overall handling of all functions, its way to janky as it is, needs to be very robust and have less funcationality
+//TODO: More secure methods of communication, right now it doesn't check certs because I use self signed, and that just doesn't cut it, very insecure
+
 var path = require('path');
 
 var inputConfigLoc = path.normalize(rootDir + '/data/input-config.json'),

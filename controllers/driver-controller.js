@@ -1,5 +1,8 @@
 'use strict';
 
+//TODO: Redo all of this file to use docker rather than the crappy monolithice style it is currently done it
+//TODO: Possible fix up the current driver requiring system as is so it can at least handle some breaking states
+
 //Gets the absolute location of the folder contained by a require file selector
 function rationalizePaths(array){
     var path;
