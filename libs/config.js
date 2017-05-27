@@ -14,6 +14,7 @@ var inputConfigLoc = path.normalize(rootDir + '/data/input-config.json'),
 
 var node = rootRequire(idConfigLoc),
     logging = rootRequire('libs/logging.js'),
+    proccessComm = rootRequire('libs/proccess-comm.js'),
     fs = require('fs'),
     os = require('os'),
     crypto = require('crypto'),
@@ -38,6 +39,7 @@ var types = {
 //Trust all the certs, because I use unsigned and am a horrible security person
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
+//Something like this should be built into JS, maybe it is and I just don't read documentation enough
 function objForEach(obj, funct){
     Object.keys(obj).forEach(function(key){ funct(obj[key]); });
 }
@@ -135,7 +137,7 @@ exports.alertInputChange = function(id, type, value){
     request.post(info, function(err, resp, body){
         if(err){
             logging.error('Error updating server with input ' + id + '!');
-            exports.reconnect();
+            proccessComm.reconnect();
         }
 
         busy = false;
@@ -157,7 +159,7 @@ exports.requestServerUpdate = function(id, type, value){
     request.post(info, function(err, resp, body){
         if(err){
             logging.error('Error talking to the server  "' + node.server || 'Unregistered' + '"!');
-            exports.reconnect();
+            proccessComm.reconnect();
         }else{
             logging.success('Updated the server with the current configuration!');
         }
@@ -230,18 +232,6 @@ exports.serverInfo = function(req, res){
 
 exports.genId = function(){
     return crypto.randomBytes(25).toString('hex');
-};
-
-exports.reset = function(){
-    process.send({
-        command: 'reset'
-    });
-};
-
-exports.reconnect = function(){
-    process.send({
-        command: 'reconnect'
-    });
 };
 
 exports.types = types;

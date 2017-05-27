@@ -17,6 +17,7 @@ function rationalizePaths(array){
 }
 
 var master = rootRequire('libs/config.js'),
+    proccessComm = rootRequire('libs/proccess-comm.js'),
     logging = rootRequire('libs/logging.js'),
     extend = require('util')._extend,
     glob = require('glob'),
@@ -65,7 +66,7 @@ var npmExec = function(pack){
 
         if(!packCount){
             if(!totalErrorPackCount || totalErrorPackCount !== totalPackCount){
-                master.reset();
+                proccessComm.reset();
             }
         }
     })
