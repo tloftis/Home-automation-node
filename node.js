@@ -1,5 +1,7 @@
 'use strict';
 
+//TODO: Use node v4 style code, no ()=>{} functions, lets, generators, itterators, Yeilds, awaits, async. This runs on arm v6 systems and node doesn't get too new of node version
+
 var app = require('express')(),
 	path = require('path'),
 	bodyParser = require('body-parser'),
