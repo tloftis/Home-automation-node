@@ -13,7 +13,8 @@ function rationalizePaths(array){
     return array;
 }
 
-var master = require('../config.js'),
+var master = rootRequire('libs/config.js'),
+    logging = rootRequire('libs/logging.js'),
     extend = require('util')._extend,
     glob = require('glob'),
     zlib = require('zlib'),
@@ -43,19 +44,19 @@ var npmExec = function(pack){
     installingPacks[pack] = true;
     totalPackCount++;
     packCount++;
-    master.info('Installing NPM package ' + pack);
+    logging.info('Installing NPM package ' + pack);
 
     require('child_process').exec('npm install ' + pack + ' --prefix ' + rootDir, function(err, std, str){
         packCount--;
 
         if(err){
-            master.error('Failed installing ' + pack, err);
+            logging.error('Failed installing ' + pack, err);
             totalErrorPackCount++;
         }else if(str.indexOf('npm ERR!') !== -1){
-            master.error('Error installing ' + pack, str);
+            logging.error('Error installing ' + pack, str);
             totalErrorPackCount++;
         }else{
-            master.success('NPM Package ' + pack + ' Installed!');
+            logging.success('NPM Package ' + pack + ' Installed!');
         }
 
 
@@ -169,7 +170,7 @@ exports.getInputDriver = function(id){
 function deleteDriver(driver, callback){
     rmdirAsync(driver.dir, function(err){
         if(!err){
-            master.success('Driver ' + driver.name + ' deleted successfully!', driver);
+            logging.success('Driver ' + driver.name + ' deleted successfully!', driver);
             var index = inputDrivers.indexOf(driver);
 
             if(index !== -1){
@@ -181,7 +182,7 @@ function deleteDriver(driver, callback){
                 delete outputDriversHash[driver.id];
             }
         }else{
-            master.error('Error attempting to delete driver!', err);
+            logging.error('Error attempting to delete driver!', err);
         }
 
         if(callback){ callback(err); }

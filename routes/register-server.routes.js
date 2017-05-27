@@ -1,7 +1,7 @@
 'use strict';
 
-var config = require('../config.js');
-var drivers = require('../controllers/driver-controller');
+var config = rootRequire('libs/config.js');
+var drivers = rootRequire('controllers/driver-controller');
 
 module.exports = function(app) {
     app.route('/api/register')

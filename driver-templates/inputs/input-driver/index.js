@@ -1,6 +1,6 @@
 'use strict';
 
-var master = require('../../../config.js');
+var master = rootRequire('libs/config.js');
 var gpio = require('wiring-pi');
 gpio.setup('gpio');
 

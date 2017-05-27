@@ -1,8 +1,9 @@
 'use strict';
 
-var config = require('../config.js'),
-    inputConfigs = require('../data/input-config.json'),
-    driverController = require('./driver-controller.js'),
+var config = rootRequire('libs/config.js'),
+    logging = rootRequire('libs/logging.js'),
+    inputConfigs = rootRequire('data/input-config.json'),
+    driverController = rootRequire('controllers/driver-controller.js'),
     inputsHash = {},
     inputs = [];
 
@@ -14,7 +15,7 @@ function addInput(inputConfig){
     var driver = driverController.getInputDriver(inputConfig.driverId);
 
     if((driver || {}).notReady){
-        config.error('Input Driver Not Ready:', driver);
+        logging.error('Input Driver Not Ready:', driver);
         return false;
     }
 
@@ -26,7 +27,7 @@ function addInput(inputConfig){
         });
 
         if(inputConfig.driver instanceof Error){
-            config.error('Input Driver Failure:', inputConfig.driver);
+            logging.error('Input Driver Failure:', inputConfig.driver);
             return;
         }
 

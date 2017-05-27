@@ -1,13 +1,12 @@
 'use strict';
-
 var path = require('path');
 
-//Configuration File Locations
-var inputConfigLoc = path.normalize(__dirname + '/data/input-config.json'),
-    outputConfigLoc = path.normalize(__dirname + '/data/output-config.json'),
-    idConfigLoc = path.normalize(__dirname + '/data/config.json');
+var inputConfigLoc = path.normalize(rootDir + '/data/input-config.json'),
+    outputConfigLoc = path.normalize(rootDir + '/data/output-config.json'),
+    idConfigLoc = path.normalize(rootDir + '/data/config.json');
 
-var node = require(idConfigLoc),
+var node = rootRequire(idConfigLoc),
+    logging = rootRequire('libs/logging.js'),
     fs = require('fs'),
     os = require('os'),
     crypto = require('crypto'),
@@ -21,10 +20,6 @@ for(var i = 1; i <= pinCount; i++){
     registeredPins[i] = false;
 }
 
-var error = function(str, obj) { console.log(chalk.bold.red(str), obj || ''); },
-    info = function(str, obj) { console.log(chalk.blue.bold.underline(str), obj || ''); },
-    success = function(str, obj) { console.log(chalk.green.bold(str), obj || ''); };
-
 var types = {
     number: typeof 1,
     string: typeof '',
@@ -33,22 +28,22 @@ var types = {
     array: typeof []
 };
 
-exports.error = error;
-exports.info = info;
-exports.success = success;
-
-//lets unsecure communication through for server talk, probably not that safe
+//Trust all the certs, because I use unsigned and am a horrible security person
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
-for (var j in interfaces) {
-    for (i in interfaces[j]) {
-        var address = interfaces[j][i];
-        
+function objForEach(obj, funct){
+    Object.keys(obj).forEach(function(key){ funct(obj[key]); });
+}
+
+//Still a crap shoot if it actually works consistently
+//This should just be a random hash that is saved to some config somewhere
+objForEach(interfaces, function(interF){
+    interF.forEach(function (address) {
         if (address.family === 'IPv4' && !address.internal) {
             node.id = address.mac;
         }
-    }
-}
+    })
+});
 
 function writeConfig(fileLoc, obj, callback){
     if(!callback) callback = function(){};
@@ -79,7 +74,7 @@ function updateNode(newConfig){
 
     writeConfig(idConfigLoc, node);
 
-    info('Updated node config: ' + node.name + ', location:' + node.location);
+    logging.info('Updated node config: ' + node.name + ', location:' + node.location);
     return true;
 }
 
@@ -118,7 +113,7 @@ exports.alertInputChange = function(id, type, value){
     busy = true;
 
     if(!node.server) {
-        error('No server currently registered');
+        logging.error('No server currently registered');
         busy = false;
         return;
     }
@@ -132,7 +127,7 @@ exports.alertInputChange = function(id, type, value){
 	
     request.post(info, function(err, resp, body){
         if(err){
-            error('Error updating server with input ' + id + '!');
+            logging.error('Error updating server with input ' + id + '!');
             exports.reconnect();
         }
 
@@ -154,10 +149,10 @@ exports.requestServerUpdate = function(id, type, value){
 
     request.post(info, function(err, resp, body){
         if(err){
-            error('Error talking to the server  "' + node.server || 'Unregistered' + '"!');
+            logging.error('Error talking to the server  "' + node.server || 'Unregistered' + '"!');
             exports.reconnect();
         }else{
-            success('Updated the server with the current configuration!');
+            logging.success('Updated the server with the current configuration!');
         }
     });
 };
@@ -211,7 +206,7 @@ exports.writeConfig = writeConfig;
 exports.registerServer = function(req, res){
     node.server = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
     node.server =  node.server.match(/\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b/g)[0];
-    info('Registered new server, IP:' + node.server);
+    logging.info('Registered new server, IP:' + node.server);
     writeConfig(idConfigLoc, node);
     return res.send(node);
 };

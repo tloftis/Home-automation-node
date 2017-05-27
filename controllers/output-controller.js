@@ -1,8 +1,9 @@
 'use strict';
 
-var config = require('../config.js'),
-    outputConfigs = require('../data/output-config.json'),
-    driverController = require('./driver-controller.js'),
+var config = rootRequire('libs/config.js'),
+    logging = rootRequire('libs/logging.js'),
+    outputConfigs = rootRequire('data/output-config.json'),
+    driverController = rootRequire('controllers/driver-controller.js'),
     outputsHash = {},
     outputs = [];
 
@@ -21,7 +22,7 @@ function addOutput(outputConfig){
         outputConfig.driver = new driver.setup(outputConfig.config);
 
         if(outputConfig.driver instanceof Error){
-            config.error('Output Driver Failure:', outputConfig.driver);
+            logging.error('Output Driver Failure:', outputConfig.driver);
             return outputConfig.driver;
         }
 
