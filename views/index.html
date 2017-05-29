@@ -10,6 +10,7 @@
         <br/>
         <input type="text" placeholder="Server Token" id="servToken"/>
         <br/>
+        <br/>
         <button onclick="buttonClick()">
             Submit
         </button>
@@ -36,7 +37,7 @@
                         body: data
                     };
 
-                    return fetch('/api/register', options)
+                    return fetch(url, options)
                 },
                 post: function(url, body){
                     var headers = new Headers({
@@ -58,7 +59,7 @@
                         body: data
                     };
 
-                    return fetch('/api/register', options)
+                    return fetch(url, options)
                 },
                 put: function(url, body){
                     var headers = new Headers({
@@ -80,7 +81,7 @@
                         body: data
                     };
 
-                    return fetch('/api/register', options)
+                    return fetch(url, options)
                 }
             };
 

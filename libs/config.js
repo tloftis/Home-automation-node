@@ -68,6 +68,10 @@ function writeConfig(fileLoc, obj, callback){
 }
 
 function updateNode(newConfig){
+    if(!newConfig){
+        newConfig = {};
+    }
+
     if(newConfig.name){
         node.name = newConfig.name;
     }
@@ -167,13 +171,13 @@ exports.alertInputChange = function(id, type, value){
     });
 };
 
-exports.requestServerUpdate = function(id, type, value){
+exports.requestServerUpdate = function(callback){
     var info = {
         headers: {
             'X-Token': node.serverToken
         },
         url: 'https://' + node.server + '/api/node/' + node.id,
-        form: { },
+        form: node,
         timeout: 10000,
         rejectUnhauthorized : false
     };
@@ -181,9 +185,12 @@ exports.requestServerUpdate = function(id, type, value){
     request.post(info, function(err, resp, body){
         if(err){
             logging.error('Error talking to the server  "' + node.server || 'Unregistered' + '"!');
-            proccessComm.reconnect();
         }else{
             logging.success('Updated the server with the current configuration!');
+        }
+
+        if(typeof callback === 'function'){
+            callback(err);
         }
     });
 };
@@ -227,8 +234,17 @@ exports.writeConfig = writeConfig;
 //REST Api
 exports.exists = function(req, res){
     var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-    logging.info('Contacted by : ' + ip);
-    return res.send({ message: "This node exists"});
+    logging.info('Requested to update server by : ' + ip);
+
+    exports.requestServerUpdate(function(err){
+        if(err){
+            return res.status(400).send({
+                message: err.message
+            })
+        }
+
+        return res.send({ message: "Node Registered to server Successfully"});
+    });
 };
 
 exports.registerToServer = function(req, res){
@@ -241,12 +257,15 @@ exports.registerToServer = function(req, res){
 
     updateNode(creds, node);
 
-    return res.send({ message: "Node Updated"});
-};
+    exports.requestServerUpdate(function(err){
+        if(err){
+            return res.status(400).send({
+                message: err.message
+            })
+        }
 
-exports.registerServer = function(req, res){
-    console.log('Yes, found', req.body);
-    return res.send({ message: "This node exists"});
+        return res.send({ message: "Node Registered to server Successfully"});
+    });
 };
 
 exports.configServer = function(req, res){
@@ -257,6 +276,20 @@ exports.configServer = function(req, res){
 
 exports.serverInfo = function(req, res){
     return res.send(node);
+};
+
+exports.verifyToken = function(req, res, next){
+    var token = req.headers['x-token'];
+
+    console.log(token, node.token);
+
+    if(token !== node.token){
+        return res.status(400).send({
+            message: 'Improper token: Rejected'
+        });
+    }
+
+    next();
 };
 
 exports.types = types;

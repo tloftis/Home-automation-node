@@ -6,13 +6,12 @@ var drivers = rootRequire('controllers/driver-controller.js');
 module.exports = function(app) {
     app.route('/api/register')
         .get(config.exists)
-        .put(config.registerToServer)
-        .post(config.registerServer);
+        .put(config.registerToServer);
 
-    app.route('/api/drivers/:driverId')
+    app.route('/api/drivers/:driverId').all(config.verifyToken)
         .delete(drivers.removeDriver);
 
-    app.route('/api/server')
+    app.route('/api/server').all(config.verifyToken)
         .get(config.serverInfo)
         .put(config.configServer);
 
