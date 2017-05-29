@@ -6,13 +6,74 @@
     </head>
 
     <body>
+        <input type="text" placeholder="Server IP" id="servIp"/>
+        <br/>
+        <input type="text" placeholder="Server Token" id="servToken"/>
+        <br/>
         <button onclick="buttonClick()">
             Submit
         </button>
 
-        <script>
+        <script type="text/javascript">
+            var reqService = {
+                get: function(url, body){
+                    var headers = new Headers({
+                        'Content-type':'application/json',
+                        'charset': 'utf-a'
+                    });
+
+                    var data = {};
+
+                    try{
+                        data = JSON.stringify(body);
+                    } catch(err) {
+
+                    }
+
+                    var options = {
+                        method: 'GET',
+                        headers: headers,
+                        body: data
+                    };
+
+                    return fetch('/api/register', options)
+                },
+                post: function(url, body){
+                    var headers = new Headers({
+                        'Content-type':'application/json',
+                        'charset': 'utf-a'
+                    });
+
+                    var data = {};
+
+                    try{
+                        data = JSON.stringify(body);
+                    } catch(err) {
+
+                    }
+
+                    var options = {
+                        method: 'POST',
+                        headers: headers,
+                        body: data
+                    };
+
+                    return fetch('/api/register', options)
+                }
+            };
+
             function buttonClick(){
-                console.log('test something');
+                var servId = document.getElementById('servIp').value;
+                var token = document.getElementById('servToken').value;
+
+                reqService.post('/api/register', {token: token, server: servId}).then(function(res){
+                    console.log(res.status);
+                    return res.json()
+                }).then(function(data){
+                    console.log(data);
+                }).catch(function(err){
+                    console.log(err);
+                });
             }
         </script>
     </body>

@@ -213,12 +213,13 @@ exports.writeConfig = writeConfig;
 
 //REST Api
 exports.exists = function(req, res){
-    logging.info('Contacted by : ' + req.headers);
+    var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    logging.info('Contacted by : ' + ip);
     return res.send({ message: "This node exists"});
 };
 
 exports.registerServer = function(req, res){
-    logging.info('Registered new server, IP:' + node.server);
+    console.log('Yes, found', req.body);
     return res.send({ message: "This node exists"});
 };
 
