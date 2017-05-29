@@ -63,8 +63,6 @@ function writeConfig(fileLoc, obj, callback){
         return callback(new Error('Missing config data'));
     }
 
-    console.log('Writing file', fileLoc, objStr);
-
     fs.writeFileSync(fileLoc, objStr, {flag:'w'});
     callback();
 }
@@ -82,10 +80,27 @@ function updateNode(newConfig){
         node.location = newConfig.location;
     }
 
+    if(newConfig.server){
+        node.server = newConfig.server;
+    }
+
+    if(newConfig.serverToken){
+        node.serverToken = newConfig.serverToken;
+    }
+
     writeConfig(idConfigLoc, node);
 
-    logging.info('Updated node config: ' + node.name + ', location:' + node.location);
+    logging.info('Updated node config: ' + node.name, node);
     return true;
+}
+
+exports.genId = function(){
+    return crypto.randomBytes(25).toString('hex');
+};
+
+if(!node.token){
+    node.token = exports.genId();
+    updateNode()
 }
 
 exports.getId = function(){
@@ -129,6 +144,9 @@ exports.alertInputChange = function(id, type, value){
     }
 
     var info = {
+        headers: {
+            'X-Token': node.serverToken
+        },
         url: 'https://' + node.server + '/api/input/' + id,
         form: { value: value, type: (type || typeof value) },
         timeout: 10000,
@@ -151,6 +169,9 @@ exports.alertInputChange = function(id, type, value){
 
 exports.requestServerUpdate = function(id, type, value){
     var info = {
+        headers: {
+            'X-Token': node.serverToken
+        },
         url: 'https://' + node.server + '/api/node/' + node.id,
         form: { },
         timeout: 10000,
@@ -165,14 +186,6 @@ exports.requestServerUpdate = function(id, type, value){
             logging.success('Updated the server with the current configuration!');
         }
     });
-};
-
-exports.getServer = function(){
-    return node.server;
-};
-
-exports.setServer = function(ip){
-    return node.server = ip;
 };
 
 exports.saveInputs = function(inputs){
@@ -218,6 +231,19 @@ exports.exists = function(req, res){
     return res.send({ message: "This node exists"});
 };
 
+exports.registerToServer = function(req, res){
+    console.log('Yes, found', req.body);
+
+    var creds = {
+        serverToken: req.body.token,
+        server: req.body.server
+    };
+
+    updateNode(creds, node);
+
+    return res.send({ message: "Node Updated"});
+};
+
 exports.registerServer = function(req, res){
     console.log('Yes, found', req.body);
     return res.send({ message: "This node exists"});
@@ -231,10 +257,6 @@ exports.configServer = function(req, res){
 
 exports.serverInfo = function(req, res){
     return res.send(node);
-};
-
-exports.genId = function(){
-    return crypto.randomBytes(25).toString('hex');
 };
 
 exports.types = types;

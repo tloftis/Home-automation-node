@@ -4,6 +4,7 @@
     "description": "New Un-configured Node",
     "pinCount": 40,
     "id": "",
+    "token": "",
     "server": "",
     "serverToken": ""
 }
