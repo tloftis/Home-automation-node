@@ -65,10 +65,8 @@ function writeConfig(fileLoc, obj, callback){
 
     console.log('Writing file', fileLoc, objStr);
 
-    //fs.unlink(fileLoc, function(err){
-        fs.writeFileSync(fileLoc, objStr, {flag:'w'});
-        callback();
-    //});
+    fs.writeFileSync(fileLoc, objStr, {flag:'w'});
+    callback();
 }
 
 function updateNode(newConfig){
@@ -214,6 +212,11 @@ exports.saveOutputs = function(outputs){
 exports.writeConfig = writeConfig;
 
 //REST Api
+exports.exists = function(req, res){
+    logging.info('Contacted by : ' + req.headers);
+    return res.send({ message: "This node exists"});
+};
+
 exports.registerServer = function(req, res){
     logging.info('Registered new server, IP:' + node.server);
     return res.send({ message: "This node exists"});

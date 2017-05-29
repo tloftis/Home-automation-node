@@ -93,6 +93,10 @@ var options = {
 // Create new HTTPS Server
 server = https.createServer(options, app);
 
+app.get('/', function(req,res){
+    res.sendFile(path.join(rootDir, 'views', 'index.html'));
+});
+
 app.listen(port, function(){
     config.requestServerUpdate();
 });

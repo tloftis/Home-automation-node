@@ -5,6 +5,7 @@ var drivers = rootRequire('controllers/driver-controller.js');
 
 module.exports = function(app) {
     app.route('/api/register')
+        .get(config.exists)
         .post(config.registerServer);
 
     app.route('/api/drivers/:driverId')

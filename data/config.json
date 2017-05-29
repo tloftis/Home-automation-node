@@ -1,8 +1,9 @@
 {
     "name": "New Node",
     "location": "Not Set",
-    "description": "New Unconfigured Node",
+    "description": "New Un-configured Node",
     "pinCount": 40,
     "id": "",
-    "server": ""
+    "server": "",
+    "serverToken": ""
 }
