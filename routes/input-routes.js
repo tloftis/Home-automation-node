@@ -1,8 +1,8 @@
 'use strict';
 
 var config = rootRequire('libs/config.js');
-var inputs = rootRequire('controllers/input-controller');
-var drivers = rootRequire('controllers/driver-controller');
+var inputs = rootRequire('controllers/input-controller.js');
+var drivers = rootRequire('controllers/driver-controller.js');
 
 module.exports = function(app) {
 	app.route('/api/input')

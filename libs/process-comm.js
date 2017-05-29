@@ -1,13 +1,13 @@
 'use strict';
 
 exports.reset = function(){
-    process.send({
+    (process.send || function(){})({
         command: 'reset'
     });
 };
 
 exports.reconnect = function(){
-    process.send({
+    (process.send || function(){})({
         command: 'reconnect'
     });
 };

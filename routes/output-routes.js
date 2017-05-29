@@ -1,8 +1,8 @@
 'use strict';
 
 var config = rootRequire('libs/config.js');
-var outputs = rootRequire('controllers/output-controller');
-var drivers = rootRequire('controllers/driver-controller');
+var outputs = rootRequire('controllers/output-controller.js');
+var drivers = rootRequire('controllers/driver-controller.js');
 
 module.exports = function(app) {
     app.route('/api/output')

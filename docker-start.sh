@@ -11,6 +11,7 @@ docker run \
     --mac-address=$(echo $FQDN|md5sum|sed 's/^\(..\)\(..\)\(..\)\(..\)\(..\).*$/02:\1:\2:\3:\4:\5/') \
     -v $(pwd)/drivers:/root/node/drivers/ \
 	-v $(pwd)/data:/root/node/data/ \
+	-v $(pwd)/certs:/root/node/certs/ \
 	-d \
 	-p 2000:2000 \
 	--restart=unless-stopped \

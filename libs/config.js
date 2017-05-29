@@ -12,9 +12,9 @@ var inputConfigLoc = path.normalize(rootDir + '/data/input-config.json'),
     outputConfigLoc = path.normalize(rootDir + '/data/output-config.json'),
     idConfigLoc = path.normalize(rootDir + '/data/config.json');
 
-var node = rootRequire(idConfigLoc),
+var node = rootRequire('data/config.json', {}),
     logging = rootRequire('libs/logging.js'),
-    proccessComm = rootRequire('libs/proccess-comm.js'),
+    proccessComm = rootRequire('libs/process-comm.js'),
     fs = require('fs'),
     os = require('os'),
     crypto = require('crypto'),
@@ -63,9 +63,12 @@ function writeConfig(fileLoc, obj, callback){
         return callback(new Error('Missing config data'));
     }
 
-    fs.writeFile(fileLoc, objStr, function(err) {
-        callback(err);
-    });
+    console.log('Writing file', fileLoc, objStr);
+
+    //fs.unlink(fileLoc, function(err){
+        fs.writeFileSync(fileLoc, objStr, {flag:'w'});
+        callback();
+    //});
 }
 
 function updateNode(newConfig){
@@ -211,13 +214,9 @@ exports.saveOutputs = function(outputs){
 exports.writeConfig = writeConfig;
 
 //REST Api
-
 exports.registerServer = function(req, res){
-    node.server = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-    node.server =  node.server.match(/\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b/g)[0];
     logging.info('Registered new server, IP:' + node.server);
-    writeConfig(idConfigLoc, node);
-    return res.send(node);
+    return res.send({ message: "This node exists"});
 };
 
 exports.configServer = function(req, res){

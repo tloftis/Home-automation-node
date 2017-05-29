@@ -17,7 +17,7 @@ function rationalizePaths(array){
 }
 
 var master = rootRequire('libs/config.js'),
-    proccessComm = rootRequire('libs/proccess-comm.js'),
+    proccessComm = rootRequire('libs/process-comm.js'),
     logging = rootRequire('libs/logging.js'),
     extend = require('util')._extend,
     glob = require('glob'),
@@ -206,8 +206,7 @@ exports.saveOutputDriver = function(req, res){
     var extractor = tar.Extract({path: './drivers/outputs'})
         .on('error', onError);
 
-    req
-        .on('error', onError)
+    req.on('error', onError)
         .pipe(zlib.createUnzip())
         .on('error', onError)
         .pipe(extractor)
@@ -233,12 +232,9 @@ exports.saveInputDriver = function(req, res){
     var extractor = tar.Extract({path: './drivers/inputs'})
         .on('error', onError);
 
-    req
-        .on('error', onError)
-
+    req.on('error', onError)
         .pipe(zlib.createUnzip())
         .on('error', onError)
-
         .pipe(extractor)
         .on('error', onError)
         .on('finish', function(){
