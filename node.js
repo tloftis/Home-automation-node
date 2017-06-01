@@ -6,7 +6,7 @@ global.rootDir = __dirname;
 
 global.rootRequire = function(str, defaultVal){
 	if(!str || (typeof str !== 'string')){
-		return;
+		return defaultVal;
 	}
 
 	//split into folder path, remove any empty subsets, if they are suppose to be there then change the FS not the code

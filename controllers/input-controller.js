@@ -170,12 +170,15 @@ exports.addNewInput = function(req, res){
 
         if(newInput = addInput(newInput)){
             config.saveInputs(inputs);
+            logging.success('New Input Created', newInput);
             return res.send(newInput);
         }
 
+        logging.error('Input Failed To Create', newInput);
         return res.status(400).send("Error Adding Input");
     }
 
+    logging.error('Input Failed To Create', newInput || {message:'Missing Config'});
     return res.status(400).send("Input configuration is incorrect!");
 };
 
@@ -189,6 +192,7 @@ exports.updateInput = function(req, res){
     var newInput = req.body.input;
 
     if(newInput && updateConfig(oldInput, newInput)){
+        logging.success('Input Updated', oldInput);
         return res.send(oldInput);
     }
 
@@ -200,6 +204,7 @@ exports.removeInput = function(req, res){
     newInput.driver.destroy();
     inputs.splice(inputs.indexOf(newInput), 1);
     config.saveInputs(inputs);
+    logging.success('Input Deleted', newInput);
     return res.send(newInput);
 };
 

@@ -153,9 +153,11 @@ exports.updateOutput = function(req, res){
     var newOutput = req.body.output;
 
     if(newOutput && updateConfig(oldOutput, newOutput)){
+        logging.success('Output Updated', newOutput);
         return res.send(oldOutput);
     }
 
+    logging.error('Output Failled To Updated', newOutput);
     return res.status(400).send("Error updating output.");
 };
 
@@ -177,12 +179,15 @@ exports.addNewOutput = function(req, res){
 
         if(!(newOutput instanceof Error)){
             config.saveOutputs(outputs);
+            logging.success('Output Created', newOutput);
             return res.send(newOutput);
         }
 
+        logging.error('Output Failed to Create', newOutput);
         return res.status(400).send(newOutput.message);
     }
 
+    logging.error('Output Failed to Create', newOutput || {message:'Missing Configuration'});
     return res.status(400).send("Output configuration is incorrect!");
 };
 
@@ -191,6 +196,7 @@ exports.removeOutput = function(req, res){
     newOutput.driver.destroy();
     outputs.splice(outputs.indexOf(newOutput), 1);
     config.saveOutputs(outputs);
+    logging.success('Output Deleted', newOutput);
     return res.send(newOutput);
 };
 

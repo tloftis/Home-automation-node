@@ -176,7 +176,7 @@ exports.requestServerUpdate = function(callback){
         headers: {
             'X-Token': node.serverToken
         },
-        url: 'https://' + node.server + '/api/node/' + node.id,
+        url: 'https://' + node.server + '/api/node',
         form: node,
         timeout: 10000,
         rejectUnhauthorized : false
@@ -184,9 +184,9 @@ exports.requestServerUpdate = function(callback){
 
     request.post(info, function(err, resp, body){
         if(err){
-            logging.error('Error talking to the server  "' + node.server || 'Unregistered' + '"!');
+            logging.error('Error talking to the server  "' + node.server || 'Unregistered' + '"!', err);
         }else{
-            logging.success('Updated the server with the current configuration!');
+            logging.success('Updated the server with the current configuration!', body);
         }
 
         if(typeof callback === 'function'){
@@ -248,8 +248,6 @@ exports.exists = function(req, res){
 };
 
 exports.registerToServer = function(req, res){
-    console.log('Yes, found', req.body);
-
     var creds = {
         serverToken: req.body.token,
         server: req.body.server
@@ -280,8 +278,6 @@ exports.serverInfo = function(req, res){
 
 exports.verifyToken = function(req, res, next){
     var token = req.headers['x-token'];
-
-    console.log(token, node.token);
 
     if(token !== node.token){
         return res.status(400).send({
