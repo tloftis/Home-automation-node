@@ -1,6 +1,7 @@
 node_modules/*
 /drivers/inputs/*
 /drivers/outputs/*
+/data/*
 npm-debug.log
 input-config.json
 output-config.json
