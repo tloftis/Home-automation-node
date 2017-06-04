@@ -38,6 +38,7 @@ var app = require('express')(),
     bodyParser = require('body-parser'),
     https = require('https'),
     config = rootRequire('libs/config.js'),
+    node = config.getNode(),
     port = process.env.PORT || 2000;
 
 app.use(bodyParser.json());       // to support JSON-encoded bodies
@@ -93,7 +94,21 @@ var options = {
 // Create new HTTPS Server
 
 app.get('/', function(req,res){
-    res.sendFile(path.join(rootDir, 'views', 'index.html'));
+    /* Originally Though I would Inject the info into the page and didn't want a view render for such a small page, but not actually needed/wanted
+    var header  = ' \
+    <script type="text/javascript"> \n \
+            var serverIp = "' + node.server + '"; \n \
+            var serverToken = "' + node.serverToken + '"; \n \
+    </script> \n';
+    */
+
+    if(node.serverToken && node.server){
+        return res.send('<header>Server Already Set, user configured server or server info in config file on device manually</header>');
+    }
+
+    fs.readFile(path.join(rootDir, 'views', 'index.html'),{encoding: 'utf-8'}, function(err, data){
+        res.send(data);
+    });
 });
 
 server = https.createServer(options, app);

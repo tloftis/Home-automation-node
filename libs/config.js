@@ -84,13 +84,14 @@ function updateNode(newConfig){
         node.location = newConfig.location;
     }
 
+    /* Want to handle these separately, don't want them touched other than the init web page
     if(newConfig.server){
         node.server = newConfig.server;
     }
 
     if(newConfig.serverToken){
         node.serverToken = newConfig.serverToken;
-    }
+    }*/
 
     writeConfig(idConfigLoc, node);
 
@@ -109,6 +110,10 @@ if(!node.token){
 
 exports.getId = function(){
     return node.id;
+};
+
+exports.getNode = function(){
+    return node;
 };
 
 exports.registerPin = function(pin){
@@ -156,7 +161,7 @@ exports.alertInputChange = function(id, type, value){
         timeout: 10000,
         rejectUnhauthorized : false
     };
-	
+
     request.post(info, function(err, resp, body){
         if(err){
             logging.error('Error updating server with input ' + id + '!');
@@ -248,20 +253,27 @@ exports.exists = function(req, res){
 };
 
 exports.registerToServer = function(req, res){
-    var creds = {
-        serverToken: req.body.token,
-        server: req.body.server
-    };
+    if(node.serverToken && node.server){
+        return res.status(400).send({
+            message: 'Server Already Set, user configured server or empty config on device manually'
+        })
+    }
 
-    updateNode(creds, node);
+    node.serverToken = req.body.token;
+    node.server = req.body.server;
 
     exports.requestServerUpdate(function(err){
+
         if(err){
+            delete node.serverToken;
+            delete node.server;
+
             return res.status(400).send({
                 message: err.message
             })
         }
 
+        updateNode();
         return res.send({ message: "Node Registered to server Successfully"});
     });
 };
@@ -278,8 +290,11 @@ exports.serverInfo = function(req, res){
 
 exports.verifyToken = function(req, res, next){
     var token = req.headers['x-token'];
+    var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 
     if(token !== node.token){
+        logging.error('Token Verification Failed', ip);
+
         return res.status(400).send({
             message: 'Improper token: Rejected'
         });
