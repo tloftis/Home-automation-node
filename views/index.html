@@ -5,8 +5,8 @@
     </head>
 
     <body>
-        <input type="text" placeholder="Server IP" id="servIp"/>
-        <br/>
+        <!--<input type="text" placeholder="Server IP" id="servIp"/>
+        <br/>-->
         <input type="text" placeholder="Server Token" id="servToken"/>
         <br/>
         <br/>
@@ -88,10 +88,10 @@
             };
 
             function buttonClick(){
-                var servId = document.getElementById('servIp').value;
+                //var servId = document.getElementById('servIp').value;
                 var token = document.getElementById('servToken').value;
 
-                reqService.put('/api/register', {token: token, server: servId}).then(function(res){
+                reqService.put('/api/register', {token: token }).then(function(res){
                     console.log(res.status);
                     return res.json()
                 }).then(function(data){

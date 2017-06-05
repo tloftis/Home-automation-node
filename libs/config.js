@@ -14,8 +14,9 @@ var inputConfigLoc = path.normalize(rootDir + '/data/input-config.json'),
 
 var node = rootRequire('data/config.json', {}),
     logging = rootRequire('libs/logging.js'),
-    proccessComm = rootRequire('libs/process-comm.js'),
+    //proccessComm = rootRequire('libs/process-comm.js'),
     fs = require('fs'),
+    async = require('async'),
     os = require('os'),
     crypto = require('crypto'),
     request = require('request'),
@@ -42,6 +43,16 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 //Something like this should be built into JS, maybe it is and I just don't read documentation enough
 function objForEach(obj, funct){
     Object.keys(obj).forEach(function(key){ funct(obj[key]); });
+}
+
+//I use async very little, eventually I would like to remove it as a lib and just make my own version, only because I would enjoy it
+//So I just wrap this function with my own for now
+function asyncParallel (array, funct, callback) {
+    async.parallel((array || []).map(function (val) {
+        return function (next){
+            funct(val, next);
+        }
+    }), callback);
 }
 
 //Still a crap shoot if it actually works consistently
@@ -146,56 +157,70 @@ exports.alertInputChange = function(id, type, value){
 
     busy = true;
 
-    if(!node.server) {
+    if(!Object.keys(node.server).length) {
         logging.error('No server currently registered');
         busy = false;
         return;
     }
 
-    var info = {
-        headers: {
-            'X-Token': node.serverToken
-        },
-        url: 'https://' + node.server + '/api/input/' + id,
-        form: { value: value, type: (type || typeof value) },
-        timeout: 10000,
-        rejectUnhauthorized : false
-    };
+    asyncParallel(Object.keys(node.server), function (server, next){
+        var info = {
+            headers: {
+                'X-Token': node.token
+            },
+            url: 'https://' + server + '/api/input/' + id,
+            form: { value: value, type: (type || typeof value) },
+            timeout: 10000,
+            rejectUnhauthorized : false
+        };
 
-    request.post(info, function(err, resp, body){
-        if(err){
-            logging.error('Error updating server with input ' + id + '!');
-            proccessComm.reconnect();
-        }
+        request.post(info, function(err, resp, body){
+            if(err){
+                return logging.error('Error updating server: ' + server + ' with input ' + id + '!', err);
+                //proccessComm.reconnect(); Not sure the purpose of this call, just going to comment it out and yolo
+            }
 
+            if(resp.statusCode !== 200){
+                return logging.error('Error updating server: ' + server + ' with input ' + id + '!', body);
+            }
+
+            next();
+        });
+    }, function(){
         busy = false;
 
-        if(callbackList.length){
+        if (callbackList.length) {
             return callbackList.splice(0,1)[0]();
         }
     });
 };
 
 exports.requestServerUpdate = function(callback){
-    var info = {
-        headers: {
-            'X-Token': node.serverToken
-        },
-        url: 'https://' + node.server + '/api/node',
-        form: node,
-        timeout: 10000,
-        rejectUnhauthorized : false
-    };
+    asyncParallel(Object.keys(node.server), function (server, next){
+        var info = {
+            headers: {
+                'X-Token': node.token
+            },
+            url: 'https://' + server + '/api/node',
+            form: { port: process.env.PORT || 2000},
+            timeout: 10000,
+            rejectUnhauthorized : false
+        };
 
-    request.post(info, function(err, resp, body){
-        if(err){
-            logging.error('Error talking to the server  "' + node.server || 'Unregistered' + '"!', err);
-        }else{
-            logging.success('Updated the server with the current configuration!', body);
-        }
+        request.post(info, function(err, resp, body){
+            if(err){
+                logging.error('Error talking to the server  "' + server || 'Unregistered' + '"!', err);
+            } else if (resp.statusCode !== 200) {
+                logging.error('Error talking to the server: ' + server, body);
+            } else {
+                logging.success('Updated the server with the current configuration!', body);
+            }
 
+            next();
+        });
+    }, function(){
         if(typeof callback === 'function'){
-            callback(err);
+            callback();
         }
     });
 };
@@ -236,37 +261,37 @@ exports.saveOutputs = function(outputs){
 
 exports.writeConfig = writeConfig;
 
-//REST Api
-exports.exists = function(req, res){
-    var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-    logging.info('Requested to update server by : ' + ip);
+exports.setServer = function(req, res){
+    if(!node.server instanceof Object){
+        node.server = {};
+    }
 
-    exports.requestServerUpdate(function(err){
-        if(err){
-            return res.status(400).send({
-                message: err.message
-            })
-        }
+    var ip = req.strippedIp,
+        port = (req.body || {}).port;
 
-        return res.send({ message: "Node Registered to server Successfully"});
-    });
+    if (!ip || !+port) {
+        return res.status(400).send({
+            message: 'Improper call, missing or containing extra data'
+        });
+    }
+
+    node.server[ip + ':' + port] = true;
+    updateNode();
+    return res.send({ message: 'Registered'});
 };
 
 exports.registerToServer = function(req, res){
-    if(node.serverToken && node.server){
+    if(node.serverToken){
         return res.status(400).send({
             message: 'Server Already Set, user configured server or empty config on device manually'
         })
     }
 
     node.serverToken = req.body.token;
-    node.server = req.body.server;
 
     exports.requestServerUpdate(function(err){
-
         if(err){
             delete node.serverToken;
-            delete node.server;
 
             return res.status(400).send({
                 message: err.message
@@ -289,10 +314,10 @@ exports.serverInfo = function(req, res){
 };
 
 exports.verifyToken = function(req, res, next){
-    var token = req.headers['x-token'];
-    var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    var token = req.headers['x-token'],
+        ip = req.strippedIp;
 
-    if(token !== node.token){
+    if(token !== node.serverToken){
         logging.error('Token Verification Failed', ip);
 
         return res.status(400).send({

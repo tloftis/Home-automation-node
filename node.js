@@ -43,6 +43,11 @@ var app = require('express')(),
 
 app.use(bodyParser.json());       // to support JSON-encoded bodies
 
+app.use(function(req, res, next){
+    req.strippedIp = (req.headers['x-forwarded-for'] || req.connection.remoteAddress).split(':').pop();
+    next();
+});
+
 app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
     extended: true,
     parameterLimit: 10000,
@@ -112,6 +117,7 @@ app.get('/', function(req,res){
 });
 
 server = https.createServer(options, app);
+
 server.listen(port, function(){
     config.requestServerUpdate();
 });
