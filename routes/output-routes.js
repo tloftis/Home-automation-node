@@ -5,20 +5,20 @@ var outputs = rootRequire('controllers/output-controller.js');
 var drivers = rootRequire('controllers/driver-controller.js');
 
 module.exports = function(app) {
-    app.route('/api/output').all(config.verifyToken)
+    app.route('/api/output')
         .get(outputs.status)
         .put(outputs.updateOutputs)
         .post(outputs.addNewOutput);
 
-    app.route('/api/output/drivers').all(config.verifyToken)
+    app.route('/api/output/drivers')
         .get(drivers.outputDrivers)
         .post(drivers.saveOutputDriver);
 
-    app.route('/api/output/:outputId').all(config.verifyToken)
+    app.route('/api/output/:outputId')
         .put(outputs.updateOutput)
         .delete(outputs.removeOutput);
 
-    app.route('/api/output/:outputId/set').all(config.verifyToken)
+    app.route('/api/output/:outputId/set')
         .post(outputs.set);
 
     app.param('outputId', outputs.getOutputById);

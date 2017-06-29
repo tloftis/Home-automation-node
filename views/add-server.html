@@ -5,22 +5,24 @@
     </head>
 
     <body>
-        <input type="text" placeholder="Username" id="username"/>
+    <div style="width: 100%; align-content: center; align-items: center; text-align: center">
+        <input type="text" placeholder="Server's Address" id="serverAdd" style="width: 20%"/>
         <br/>
         <br/>
-        <input type="text" placeholder="Password" id="password"/>
+        <input type="text" placeholder="Server's Token" id="servToken" style="width: 20%"/>
         <br/>
         <br/>
         <button onclick="buttonClick()">
             Submit
         </button>
+    </div>
         <br/>
         <br/>
         <input style="width: 100%; height: 50px;" type="text" id="messageText" readonly/>
 
         <script type="text/javascript">
             var reqService = {
-                post: function(url, body){
+                put: function(url, body){
                     var headers = new Headers({
                         'Content-type':'application/json',
                         'charset': 'utf-a'
@@ -35,7 +37,7 @@
                     }
 
                     var options = {
-                        method: 'POST',
+                        method: 'PUT',
                         headers: headers,
                         credentials: 'same-origin',
                         body: data
@@ -46,18 +48,19 @@
             };
 
             function buttonClick(){
-                var username = document.getElementById('username').value,
-                    password = document.getElementById('password').value;
+                var servToken = document.getElementById('servToken').value,
+                    addr = document.getElementById('serverAdd').value;
 
-                reqService.post('/api/login', {username: username, password :password}).then(function(res){
-                    if(res.status === 200){
-                        window.location = '/config';
-                    }
-
-                    return res.json();
+                reqService.put('/add-server', {addr :addr, servToken: servToken}).then(function(res){
+                    console.log(res.status);
+                    return res.json()
                 }).then(function(data){
+                    console.log(data);
                     var msgEle = document.getElementById('messageText');
-                    (msgEle || {}).value = (data || {}).message;
+                    (msgEle || {}).value = data.message;
+                }).catch(function(err){
+                    var msgEle = document.getElementById('messageText');
+                    (msgEle || {}).value = err.message;
                 });
             }
         </script>

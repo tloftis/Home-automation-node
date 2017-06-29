@@ -10,6 +10,7 @@ var path = require('path');
 
 var inputConfigLoc = path.normalize(rootDir + '/data/input-config.json'),
     outputConfigLoc = path.normalize(rootDir + '/data/output-config.json'),
+    serverCert = path.normalize(rootDir + '/data/server-certs.json'),
     idConfigLoc = path.normalize(rootDir + '/data/config.json');
 
 var node = rootRequire('data/config.json', {}),
@@ -25,6 +26,16 @@ var node = rootRequire('data/config.json', {}),
     pinCount = (node.pinCount ? node.pinCount : 26),
     registeredPins = {};
 
+try {
+    node.serverCerts = rootRequire('data/server-certs.json').map(function(baseCert){
+        return Buffer.from(baseCert, 'base64').toString();
+    });
+} catch (err){
+    node.serverCerts = [];
+}
+
+console.log(node.serverCerts);
+
 for(var i = 1; i <= pinCount; i++){
     registeredPins[i] = false;
 }
@@ -38,7 +49,7 @@ var types = {
 };
 
 //Trust all the certs, because I use unsigned and am a horrible security person
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+//process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 //Something like this should be built into JS, maybe it is and I just don't read documentation enough
 function objForEach(obj, funct){
@@ -78,6 +89,19 @@ function writeConfig(fileLoc, obj, callback){
     callback();
 }
 
+function writeServerPem(fileLoc, pem, callback){
+    if(!callback) callback = function(){};
+
+    var objStr = JSON.stringify(obj, null, 4);
+
+    if(!pem.trim()){
+        return callback(new Error('Missing config data'));
+    }
+
+    fs.writeFileSync(fileLoc, pem, {flag:'w'});
+    callback();
+}
+
 function updateNode(newConfig){
     if(!newConfig){
         newConfig = {};
@@ -113,11 +137,6 @@ function updateNode(newConfig){
 exports.genId = function(){
     return crypto.randomBytes(25).toString('hex');
 };
-
-if(!node.token){
-    node.token = exports.genId();
-    updateNode()
-}
 
 exports.getId = function(){
     return node.id;
@@ -166,12 +185,15 @@ exports.alertInputChange = function(id, type, value){
     asyncParallel(Object.keys(node.server), function (server, next){
         var info = {
             headers: {
-                'X-Token': node.token
+                'X-Token': node.server[server]
             },
             url: 'https://' + server + '/api/input/' + id,
             form: { value: value, type: (type || typeof value) },
             timeout: 10000,
-            rejectUnhauthorized : false
+            ca: node.serverCerts,
+            checkServerIdentity: function(host, key){
+                //console.log(key.raw.toString());
+            }
         };
 
         request.post(info, function(err, resp, body){
@@ -199,12 +221,16 @@ exports.requestServerUpdate = function(callback){
     asyncParallel(Object.keys(node.server), function (server, next){
         var info = {
             headers: {
-                'X-Token': node.token
+                'X-Token': node.server[server]
             },
             url: 'https://' + server + '/api/node',
             form: { port: process.env.PORT || 2000},
             timeout: 10000,
-            rejectUnhauthorized : false
+            ca: node.serverCerts,
+            checkServerIdentity: function(host, key){
+                //console.log(key.raw.toString());
+            },
+            rejectUnhauthorized : true
         };
 
         request.post(info, function(err, resp, body){
@@ -223,6 +249,12 @@ exports.requestServerUpdate = function(callback){
             callback();
         }
     });
+};
+
+exports.saveCerts = function(certs){
+    writeConfig(serverCert, (certs || []).map(function(cert){
+        return new Buffer(cert).toString('base64');
+    }));
 };
 
 exports.saveInputs = function(inputs){
@@ -280,14 +312,29 @@ exports.setServer = function(req, res){
     return res.send({ message: 'Registered'});
 };
 
-exports.registerToServer = function(req, res){
-    if(node.serverToken){
+exports.addCert = function(req, res){
+    if (!req.body.cert) {
         return res.status(400).send({
-            message: 'Server Already Set, user configured server or empty config on device manually'
-        })
+            message: 'Missing data'
+        });
     }
 
-    node.serverToken = req.body.token;
+    var cert = Buffer.from(req.body.cert, 'base64').toString();
+    console.log(cert);
+
+    if(!(1 + node.serverCerts.indexOf(cert))){
+        node.serverCerts.push(cert);
+        exports.saveCerts(node.serverCerts);
+    }
+
+    return res.send({ message: 'Registered'});
+};
+
+exports.registerToServer = function(req, res){
+    node.token = req.body.token;
+    node.addr = req.body.addr;
+
+    node.server[ip + ':' + port] = node.token;
 
     exports.requestServerUpdate(function(err){
         if(err){
@@ -311,21 +358,6 @@ exports.configServer = function(req, res){
 
 exports.serverInfo = function(req, res){
     return res.send(node);
-};
-
-exports.verifyToken = function(req, res, next){
-    var token = req.headers['x-token'],
-        ip = req.strippedIp;
-
-    if(token !== node.serverToken){
-        logging.error('Token Verification Failed', ip);
-
-        return res.status(400).send({
-            message: 'Improper token: Rejected'
-        });
-    }
-
-    next();
 };
 
 exports.types = types;

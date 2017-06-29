@@ -41,6 +41,8 @@ var app = require('express')(),
     node = config.getNode(),
     port = process.env.PORT || 2000;
 
+rootRequire('node-web.js');
+
 app.use(bodyParser.json());       // to support JSON-encoded bodies
 
 app.use(function(req, res, next){
@@ -67,8 +69,9 @@ var certificate = fs.readFileSync(path.resolve('./certs/cert.pem'), 'utf8');
 var options = {
     key: privateKey,
     cert: certificate,
-    //    requestCert : true,
-    //    rejectUnauthorized : true,
+    ca: node.serverCerts,
+    requestCert : true,
+    rejectUnauthorized : true,
     secureProtocol: 'TLSv1_method',
     ciphers: [
         'ECDHE-RSA-AES128-GCM-SHA256',
@@ -96,25 +99,7 @@ var options = {
     honorCipherOrder: true
 };
 
-// Create new HTTPS Server
 
-app.get('/', function(req,res){
-    /* Originally Though I would Inject the info into the page and didn't want a view render for such a small page, but not actually needed/wanted
-    var header  = ' \
-    <script type="text/javascript"> \n \
-            var serverIp = "' + node.server + '"; \n \
-            var serverToken = "' + node.serverToken + '"; \n \
-    </script> \n';
-    */
-
-    if(node.serverToken && node.server){
-        return res.send('<header>Server Already Set, user configured server or server info in config file on device manually</header>');
-    }
-
-    fs.readFile(path.join(rootDir, 'views', 'index.html'),{encoding: 'utf-8'}, function(err, data){
-        res.send(data);
-    });
-});
 
 server = https.createServer(options, app);
 
