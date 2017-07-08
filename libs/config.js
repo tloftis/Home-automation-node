@@ -66,6 +66,10 @@ function asyncParallel (array, funct, callback) {
     }), callback);
 }
 
+function hashPassword (password) {
+    return crypto.pbkdf2Sync(password || '', new Buffer('thesalt', 'base64'), 10000, 64, 'SHA1').toString('base64');
+}
+
 //Still a crap shoot if it actually works consistently
 //This should just be a random hash that is saved to some config somewhere
 objForEach(interfaces, function(interF){
@@ -133,6 +137,15 @@ function updateNode(newConfig){
     logging.info('Updated node config: ' + node.name, node);
     return true;
 }
+
+exports.setPassword = function(pass){
+    node.password = hashPassword(pass);
+    updateNode();
+};
+
+exports.testPassword = function(pass){
+    return node.password === hashPassword(pass);
+};
 
 exports.genId = function(){
     return crypto.randomBytes(25).toString('hex');

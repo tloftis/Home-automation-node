@@ -99,8 +99,6 @@ var options = {
     honorCipherOrder: true
 };
 
-
-
 server = https.createServer(options, app);
 
 server.listen(port, function(){
