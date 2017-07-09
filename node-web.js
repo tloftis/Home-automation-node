@@ -3,6 +3,7 @@
 var app = require('express')(),
     path = require('path'),
     fs = require('fs'),
+    crypto = require('crypto'),
     bodyParser = require('body-parser'),
     https = require('https'),
     config = rootRequire('libs/config.js'),
@@ -82,12 +83,6 @@ function verifyCookie(req,res,next){
     }
 }
 
-app.get('/', function(req,res){
-    fs.readFile(path.join(rootDir, 'views', 'index.html'),{encoding: 'utf-8'}, function(err, data){
-        res.send(data);
-    });
-});
-
 app.get('/config', verifyCookie, function(req,res){
     fs.readFile(path.join(rootDir, 'views', 'config.html'),{encoding: 'utf-8'}, function(err, data){
         res.send(data);
@@ -126,17 +121,45 @@ function genSessionToken(timeout){
 }
 
 app.post('/api/login', function(req,res){
-    var username = (req.body || {}).username;
     var password = (req.body || {}).password;
 
-    if(username === 'username' && password === 'password'){
+    if(config.testPassword(password)){
         res.cookie('node-token', genSessionToken(), { maxAge: 120000, httpOnly: true });
+
         res.send({
             message: 'Login Worked'
         });
     } else {
         res.send({
             message: 'Login Failed'
+        });
+    }
+});
+
+app.post('/api/set-password', function(req,res){
+    var password = (req.body || {}).password;
+
+    if(!node.password && password){
+        config.setPassword(password);
+
+        res.send({
+            message: 'Password Set'
+        });
+    } else {
+        res.send({
+            message: 'Password NOT Set!'
+        });
+    }
+});
+
+app.get('/', function(req,res){
+    if(node.password) {
+        fs.readFile(path.join(rootDir, 'views', 'index.html'),{encoding: 'utf-8'}, function(err, data){
+            res.send(data);
+        });
+    } else {
+        fs.readFile(path.join(rootDir, 'views', 'set-password.html'),{encoding: 'utf-8'}, function(err, data){
+            res.send(data);
         });
     }
 });
