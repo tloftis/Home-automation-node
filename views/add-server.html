@@ -52,7 +52,11 @@
                     addr = document.getElementById('serverAdd').value;
 
                 reqService.put('/add-server', {addr :addr, servToken: servToken}).then(function(res){
-                    console.log(res.status);
+                    if(res.status === 200){
+                        //I just want the message to pop up first before the redirect
+                        setTimeout(function(){ window.location='/config' }, 1000);
+                    }
+                    
                     return res.json()
                 }).then(function(data){
                     console.log(data);

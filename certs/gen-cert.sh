@@ -1,4 +1,3 @@
-#!/bin/bash
 
 openssl genrsa -out key.pem 4096
 openssl req -new -key key.pem -out csr.pem

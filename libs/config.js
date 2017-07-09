@@ -34,8 +34,6 @@ try {
     node.serverCerts = [];
 }
 
-console.log(node.serverCerts);
-
 for(var i = 1; i <= pinCount; i++){
     registeredPins[i] = false;
 }
@@ -303,8 +301,7 @@ exports.saveOutputs = function(outputs){
 
     writeConfig(outputConfigLoc, strippedOutputs || []);
 };
-
-exports.writeConfig = writeConfig;
+ exports.writeConfig = writeConfig;
 
 exports.setServer = function(req, res){
     if(!node.server instanceof Object){
@@ -312,15 +309,16 @@ exports.setServer = function(req, res){
     }
 
     var ip = req.strippedIp,
-        port = (req.body || {}).port;
+        addr = (req.body || {}).addr,
+        token = (req.body || {}).servToken;
 
-    if (!ip || !+port) {
+    if (!addr || !token) {
         return res.status(400).send({
             message: 'Improper call, missing or containing extra data'
         });
     }
 
-    node.server[ip + ':' + port] = true;
+    node.server[addr] = token;
     updateNode();
     return res.send({ message: 'Registered'});
 };
@@ -333,7 +331,6 @@ exports.addCert = function(req, res){
     }
 
     var cert = Buffer.from(req.body.cert, 'base64').toString();
-    console.log(cert);
 
     if(!(1 + node.serverCerts.indexOf(cert))){
         node.serverCerts.push(cert);

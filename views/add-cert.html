@@ -48,6 +48,11 @@
                 var cert = document.getElementById('cert').value;
 
                 reqService.put('/add-cert', { cert: btoa(cert) }).then(function(res){
+                    if(res.status === 200){
+                        //I just want the message to pop up first before the redirect
+                        setTimeout(function(){ window.location='/config' }, 1000);
+                    }
+
                     return res.json();
                 }).then(function(data){
                     var msgEle = document.getElementById('messageText');
