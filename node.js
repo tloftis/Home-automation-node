@@ -39,11 +39,15 @@ var app = require('express')(),
     https = require('https'),
     config = rootRequire('libs/config.js'),
     node = config.getNode(),
-    port = process.env.PORT || 2000;
+    port = node.port;
 
-rootRequire('node-web.js');
+console.log (node);
 
-app.use(bodyParser.json());       // to support JSON-encoded bodies
+if(node.enableWebInterface) {
+    rootRequire('node-web.js');
+}
+
+app.use(bodyParser.json()); // to support JSON-encoded bodies
 
 app.use(function(req, res, next){
     req.strippedIp = (req.headers['x-forwarded-for'] || req.connection.remoteAddress).split(':').pop();

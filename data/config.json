@@ -6,5 +6,8 @@
     "id": "",
     "token": "",
     "server": {},
-    "serverToken": ""
+    "serverCerts": [],
+    "password": "",
+    "enableWebInterface": true,
+    "port": 2000
 }
