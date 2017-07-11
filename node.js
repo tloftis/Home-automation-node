@@ -13,7 +13,7 @@ global.rootRequire = function(str, defaultVal){
 	var strArray = str.split('\\').join('/').split('/').filter(function(v){ return v; });
 
 	//If the local dir wasn't specified, then spefify it, ./../ === ../ so it is fine, but outside refs in project shouldn't exist but are allowed to
-	if(strArray[0] !== '.'){
+	if(strArray[0] !== '.') {
 		strArray.splice(0,0,rootDir);
 	}
 
@@ -22,7 +22,7 @@ global.rootRequire = function(str, defaultVal){
 
     try {
         return require(loc);
-    }catch(err){
+    } catch(err) {
 	    if(defaultVal) {
             return defaultVal;
         } else {
@@ -41,9 +41,7 @@ var app = require('express')(),
     node = config.getNode(),
     port = node.port;
 
-console.log (node);
-
-if(node.enableWebInterface) {
+if (node.enableWebInterface) {
     rootRequire('node-web.js');
 }
 

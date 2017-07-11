@@ -13,6 +13,8 @@ var inputConfigLoc = path.normalize(rootDir + '/data/input-config.json'),
     serverCert = path.normalize(rootDir + '/data/server-certs.json'),
     idConfigLoc = path.normalize(rootDir + '/data/config.json');
 
+//TODO: remove the pincount concept, this will be made to run on any hardware with node and docker
+// and that hardward doesn't actually need to have pin hardware, its just legacy and this point
 var node = rootRequire('data/config.json', {}),
     logging = rootRequire('libs/logging.js'),
     //proccessComm = rootRequire('libs/process-comm.js'),
@@ -120,6 +122,10 @@ function updateNode(newConfig){
     if(newConfig.location){
         node.location = newConfig.location;
     }
+    
+    if (typeof newConfig.enableWebInterface === 'boolean') {
+        node.enableWebInterface = newConfig.enableWebInterface;
+    }
 
     /* Want to handle these separately, don't want them touched other than the init web page
     if(newConfig.server){
@@ -157,6 +163,7 @@ exports.getNode = function(){
     return node;
 };
 
+//TODO: remove this function
 exports.registerPin = function(pin){
     pin = +pin;
 
@@ -167,6 +174,7 @@ exports.registerPin = function(pin){
     return false;
 };
 
+//TODO: remove this function
 exports.unRegisterPin = function(pin){
     registeredPins[+pin] = false;
     return true;
