@@ -101,8 +101,11 @@ var options = {
     honorCipherOrder: true
 };
 
-server = https.createServer(options, app);
+server = https.createServer(options, function(req,res){
+    app(req, res);
+});
 
 server.listen(port, function(){
+    console.log('API Now Listening on Port', port);
     config.requestServerUpdate();
 });
