@@ -85,16 +85,30 @@ function hashPassword (password) {
     })
 });*/
 
-function writeConfig(fileLoc, obj, callback){
-    if(!callback) callback = function(){};
+function cloneObj(obj) {
+    var newObj = {};
 
+    Object.keys(obj).forEach(function (key) {
+        newObj[key] = obj[key];
+    });
+
+    return newObj;
+}
+
+function writeConfig(fileLoc, obj, callback){
+    if(!callback) {
+        callback = function(){};
+    }
+
+    var objClone = cloneObj(obj);
+    delete objClone['serverCerts'];
     var objStr = JSON.stringify(obj, null, 4);
 
     if(!objStr.trim()){
         return callback(new Error('Missing config data'));
     }
 
-    fs.writeFileSync(fileLoc, objStr, {flag:'w'});
+    fs.writeFileSync(fileLoc, objStr, { flag:'w' });
     callback();
 }
 
@@ -380,8 +394,6 @@ exports.addServer = function(req, res){
     if(!node.server instanceof Object){
         node.server = {};
     }
-
-    console.log(req.body);
 
     var ip = req.strippedIp,
         port = (req.body || {}).port,

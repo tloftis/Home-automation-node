@@ -59,7 +59,6 @@
                     
                     return res.json()
                 }).then(function(data){
-                    console.log(data);
                     var msgEle = document.getElementById('messageText');
                     (msgEle || {}).value = data.message;
                 }).catch(function(err){

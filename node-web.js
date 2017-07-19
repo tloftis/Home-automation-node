@@ -84,11 +84,12 @@ function verifyCookie(req,res,next){
 }
 
 app.get('/config', verifyCookie, function(req,res){
-    fs.readFile(path.join(rootDir, 'views', 'config.html'),{encoding: 'utf-8'}, function(err, data){
+    fs.readFile(path.join(rootDir, 'views', 'add-cert.html'),{encoding: 'utf-8'}, function(err, data){
         res.send(data);
     });
 });
 
+/*
 app.route('/add-server').all(verifyCookie).
     get(function(req,res){
         fs.readFile(path.join(rootDir, 'views', 'add-server.html'),{encoding: 'utf-8'}, function(err, data){
@@ -96,13 +97,9 @@ app.route('/add-server').all(verifyCookie).
         });
     }).
     put(config.setServer);
+*/
 
 app.route('/add-cert').all(verifyCookie).
-    get(function(req,res){
-        fs.readFile(path.join(rootDir, 'views', 'add-cert.html'),{encoding: 'utf-8'}, function(err, data){
-            res.send(data);
-        });
-    }).
     put(config.addCert);
 
 function genSessionToken(timeout){
