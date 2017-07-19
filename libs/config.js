@@ -24,7 +24,7 @@ var node = rootRequire('data/config.json', {}),
     crypto = require('crypto'),
     request = require('request'),
     chalk = require('chalk'),
-    interfaces = os.networkInterfaces(),
+//    interfaces = os.networkInterfaces(),
     pinCount = (node.pinCount ? node.pinCount : 26),
     registeredPins = {};
 
@@ -48,13 +48,16 @@ var types = {
     array: typeof []
 };
 
-//Trust all the certs, because I use unsigned and am a horrible security person
+//Keep this to know where this project started from, now it has a list of trusted certs and is fairly secure...ish
 //process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 //Something like this should be built into JS, maybe it is and I just don't read documentation enough
-function objForEach(obj, funct){
+// I like this functionality but it isn't needed so I will just comment it for now
+/*
+function objForEach(obj, funct){x
     Object.keys(obj).forEach(function(key){ funct(obj[key]); });
 }
+*/
 
 //I use async very little, eventually I would like to remove it as a lib and just make my own version, only because I would enjoy it
 //So I just wrap this function with my own for now
@@ -70,15 +73,17 @@ function hashPassword (password) {
     return crypto.pbkdf2Sync(password || '', new Buffer('thesalt', 'base64'), 10000, 64, 'SHA1').toString('base64');
 }
 
+//TODO: remove this block comment because it is no longer relevant, but who really knows this projects is very
+// much not professional
 //Still a crap shoot if it actually works consistently
 //This should just be a random hash that is saved to some config somewhere
-objForEach(interfaces, function(interF){
+/*objForEach(interfaces, function(interF){
     interF.forEach(function (address) {
         if (address.family === 'IPv4' && !address.internal) {
-            node.id = address.mac;
+            ;
         }
     })
-});
+});*/
 
 function writeConfig(fileLoc, obj, callback){
     if(!callback) callback = function(){};
@@ -93,6 +98,7 @@ function writeConfig(fileLoc, obj, callback){
     callback();
 }
 
+//I don't remember why this exists as a function, I will keep it because maybe it will come back to me
 function writeServerPem(fileLoc, pem, callback){
     if(!callback) callback = function(){};
 
@@ -127,15 +133,6 @@ function updateNode(newConfig){
         node.enableWebInterface = newConfig.enableWebInterface;
     }
 
-    /* Want to handle these separately, don't want them touched other than the init web page
-    if(newConfig.server){
-        node.server = newConfig.server;
-    }
-
-    if(newConfig.serverToken){
-        node.serverToken = newConfig.serverToken;
-    }*/
-
     writeConfig(idConfigLoc, node);
 
     logging.info('Updated node config: ' + node.name, node);
@@ -152,8 +149,12 @@ exports.testPassword = function(pass){
 };
 
 exports.genId = function(){
-    return crypto.randomBytes(25).toString('hex');
+    return crypto.randomBytes(30).toString('hex');
 };
+
+if (!node.id) {
+    node.id = exports.genId() + exports.genId();
+}
 
 exports.getId = function(){
     return node.id;
@@ -309,7 +310,8 @@ exports.saveOutputs = function(outputs){
 
     writeConfig(outputConfigLoc, strippedOutputs || []);
 };
- exports.writeConfig = writeConfig;
+
+exports.writeConfig = writeConfig;
 
 exports.setServer = function(req, res){
     if(!node.server instanceof Object){
@@ -372,6 +374,30 @@ exports.configServer = function(req, res){
     var newNode = req.body.node;
     updateNode(newNode, node);
     return res.send(node);
+};
+
+exports.addServer = function(req, res){
+    if(!node.server instanceof Object){
+        node.server = {};
+    }
+
+    console.log(req.body);
+
+    var ip = req.strippedIp,
+        port = (req.body || {}).port,
+        token = (req.body || {}).token;
+
+    if (!ip || !token) {
+        return res.status(400).send({
+            message: 'Improper call, missing or containing extra data'
+        });
+    }
+
+    var addr = ip.split(':')[0] + ':' + (ip.split(':')[1] || port);
+
+    node.server[addr] = token;
+    updateNode();
+    return res.send({ message: 'Registered'});
 };
 
 exports.serverInfo = function(req, res){

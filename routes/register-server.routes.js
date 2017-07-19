@@ -9,6 +9,7 @@ module.exports = function(app) {
 
     app.route('/api/server')
         .get(config.serverInfo)
+        .post(config.addServer)
         .put(config.configServer);
 
     app.param('driverId', drivers.driverById);
