@@ -37,6 +37,7 @@ var app = require('express')(),
     fs = require('fs'),
     bodyParser = require('body-parser'),
     https = require('https'),
+    pem = require('pem'),
     config = rootRequire('libs/config.js'),
     node = config.getNode(),
     port = node.port;
@@ -62,50 +63,62 @@ rootRequire('routes/input-routes.js')(app);
 rootRequire('routes/output-routes.js')(app);
 rootRequire('routes/register-server.routes.js')(app);
 
-var server;
+function startServer(key, cert){
+    var options = {
+        key: key,
+        cert: cert,
+        ca: node.serverCerts,
+        requestCert : true,
+        rejectUnauthorized : true,
+        secureProtocol: 'TLSv1_method',
+        ciphers: [
+            'ECDHE-RSA-AES128-GCM-SHA256',
+            'ECDHE-ECDSA-AES128-GCM-SHA256',
+            'ECDHE-RSA-AES256-GCM-SHA384',
+            'ECDHE-ECDSA-AES256-GCM-SHA384',
+            'DHE-RSA-AES128-GCM-SHA256',
+            'ECDHE-RSA-AES128-SHA256',
+            'DHE-RSA-AES128-SHA256',
+            'ECDHE-RSA-AES256-SHA384',
+            'DHE-RSA-AES256-SHA384',
+            'ECDHE-RSA-AES256-SHA256',
+            'DHE-RSA-AES256-SHA256',
+            'HIGH',
+            '!aNULL',
+            '!eNULL',
+            '!EXPORT',
+            '!DES',
+            '!RC4',
+            '!MD5',
+            '!PSK',
+            '!SRP',
+            '!CAMELLIA'
+        ].join(':'),
+        honorCipherOrder: true
+    },
+    server;
+
+    server = https.createServer(options, function(req,res){
+        app(req, res);
+    });
+
+    server.listen(port, function(){
+        console.log('API Now Listening on Port', port);
+        config.requestServerUpdate();
+    });
+}
 
 // Load SSL key and certificate
-var privateKey = fs.readFileSync(path.resolve('./certs/key.pem'), 'utf8');
-var certificate = fs.readFileSync(path.resolve('./certs/cert.pem'), 'utf8');
+var certLoc = path.resolve('./certs/cert.pem');
+var keyLoc = path.resolve('./certs/key.pem');
 
-var options = {
-    key: privateKey,
-    cert: certificate,
-    ca: node.serverCerts,
-    requestCert : true,
-    rejectUnauthorized : true,
-    secureProtocol: 'TLSv1_method',
-    ciphers: [
-        'ECDHE-RSA-AES128-GCM-SHA256',
-        'ECDHE-ECDSA-AES128-GCM-SHA256',
-        'ECDHE-RSA-AES256-GCM-SHA384',
-        'ECDHE-ECDSA-AES256-GCM-SHA384',
-        'DHE-RSA-AES128-GCM-SHA256',
-        'ECDHE-RSA-AES128-SHA256',
-        'DHE-RSA-AES128-SHA256',
-        'ECDHE-RSA-AES256-SHA384',
-        'DHE-RSA-AES256-SHA384',
-        'ECDHE-RSA-AES256-SHA256',
-        'DHE-RSA-AES256-SHA256',
-        'HIGH',
-        '!aNULL',
-        '!eNULL',
-        '!EXPORT',
-        '!DES',
-        '!RC4',
-        '!MD5',
-        '!PSK',
-        '!SRP',
-        '!CAMELLIA'
-    ].join(':'),
-    honorCipherOrder: true
-};
+if(!fs.existsSync('./certs/key.pem') || !fs.existsSync('./certs/key.pem')){
+    pem.createCertificate({days: 360, selfSigned:true, keyBitsize :4096}, function(err, keys) {
+        fs.writeFileSync(certLoc, keys.serviceKey);
+        fs.writeFileSync(keyLoc, keys.certificate);
 
-server = https.createServer(options, function(req,res){
-    app(req, res);
-});
-
-server.listen(port, function(){
-    console.log('API Now Listening on Port', port);
-    config.requestServerUpdate();
-});
+        startServer(keys.serviceKey, keys.certificate);
+    });
+} else {
+    startServer(fs.readFileSync(keyLoc, 'utf8'), fs.readFileSync(certLoc, 'utf8'));
+}
