@@ -158,8 +158,8 @@ var keyLoc = path.resolve('./certs/key.pem');
 
 if(!fs.existsSync('./certs/key.pem') || !fs.existsSync('./certs/key.pem')){
     pem.createCertificate({days: 360, selfSigned:true, keyBitsize :4096}, function(err, keys) {
-        fs.writeFileSync(certLoc, keys.serviceKey);
-        fs.writeFileSync(keyLoc, keys.certificate);
+        fs.writeFileSync(keyLoc, keys.serviceKey);
+        fs.writeFileSync(certLoc, keys.certificate);
 
         startServer(keys.serviceKey, keys.certificate);
     });
