@@ -1,7 +1,5 @@
 'use strict';
 
-//TODO: Use node v4 style code, no ()=>{} arrow functions, lets, generators, itterators, Yeilds, awaits, async. This runs on arm v6 systems and node doesn't release offical intrepers for it beyond 4
-
 global.rootDir = __dirname;
 
 global.rootRequire = function(str, defaultVal){
@@ -63,10 +61,10 @@ rootRequire('routes/input-routes.js')(app);
 rootRequire('routes/output-routes.js')(app);
 rootRequire('routes/register-server.routes.js')(app);
 
-function startServer(key, cert){
+function startServer(keyLoc, certLoc){
     var options = {
-        key: key,
-        cert: cert,
+        key: fs.readFileSync(keyLoc, 'utf8'),
+        cert: fs.readFileSync(certLoc, 'utf8'),
         ca: node.serverCerts,
         requestCert : true,
         rejectUnauthorized : true,
@@ -112,13 +110,13 @@ function startServer(key, cert){
 var certLoc = path.resolve('./certs/cert.pem');
 var keyLoc = path.resolve('./certs/key.pem');
 
-if(!fs.existsSync('./certs/key.pem') || !fs.existsSync('./certs/key.pem')){
+if(!fs.existsSync(certLoc) || !fs.existsSync(keyLoc){
     pem.createCertificate({days: 360, selfSigned:true, keyBitsize :4096}, function(err, keys) {
         fs.writeFileSync(certLoc, keys.serviceKey);
         fs.writeFileSync(keyLoc, keys.certificate);
 
-        startServer(keys.serviceKey, keys.certificate);
+        startServer(keyLoc, certLoc);
     });
 } else {
-    startServer(fs.readFileSync(keyLoc, 'utf8'), fs.readFileSync(certLoc, 'utf8'));
+    startServer(keyLoc, certLoc);
 }

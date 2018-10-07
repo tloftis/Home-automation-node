@@ -116,53 +116,63 @@ app.get('/', function(req,res){
     }
 });
 
-function startServer(key, cert) {
+function startServer(keyLoc, certLoc){
     var options = {
-        key: key,
-        cert: cert,
-        secureProtocol: 'TLSv1_method',
-        ciphers: [
-            'ECDHE-RSA-AES128-GCM-SHA256',
-            'ECDHE-ECDSA-AES128-GCM-SHA256',
-            'ECDHE-RSA-AES256-GCM-SHA384',
-            'ECDHE-ECDSA-AES256-GCM-SHA384',
-            'DHE-RSA-AES128-GCM-SHA256',
-            'ECDHE-RSA-AES128-SHA256',
-            'DHE-RSA-AES128-SHA256',
-            'ECDHE-RSA-AES256-SHA384',
-            'DHE-RSA-AES256-SHA384',
-            'ECDHE-RSA-AES256-SHA256',
-            'DHE-RSA-AES256-SHA256',
-            'HIGH',
-            '!aNULL',
-            '!eNULL',
-            '!EXPORT',
-            '!DES',
-            '!RC4',
-            '!MD5',
-            '!PSK',
-            '!SRP',
-            '!CAMELLIA'
-        ].join(':'),
-        honorCipherOrder: true
-    },
-    server;
+            key: fs.readFileSync(keyLoc, 'utf8'),
+            cert: fs.readFileSync(certLoc, 'utf8'),
+            ca: node.serverCerts,
+            requestCert : true,
+            rejectUnauthorized : true,
+            secureProtocol: 'TLSv1_method',
+            ciphers: [
+                'ECDHE-RSA-AES128-GCM-SHA256',
+                'ECDHE-ECDSA-AES128-GCM-SHA256',
+                'ECDHE-RSA-AES256-GCM-SHA384',
+                'ECDHE-ECDSA-AES256-GCM-SHA384',
+                'DHE-RSA-AES128-GCM-SHA256',
+                'ECDHE-RSA-AES128-SHA256',
+                'DHE-RSA-AES128-SHA256',
+                'ECDHE-RSA-AES256-SHA384',
+                'DHE-RSA-AES256-SHA384',
+                'ECDHE-RSA-AES256-SHA256',
+                'DHE-RSA-AES256-SHA256',
+                'HIGH',
+                '!aNULL',
+                '!eNULL',
+                '!EXPORT',
+                '!DES',
+                '!RC4',
+                '!MD5',
+                '!PSK',
+                '!SRP',
+                '!CAMELLIA'
+            ].join(':'),
+            honorCipherOrder: true
+        },
+        server;
 
-    server = https.createServer(options, app);
-    server.listen(port);
+    server = https.createServer(options, function(req,res){
+        app(req, res);
+    });
+
+    server.listen(port, function(){
+        console.log('API Now Listening on Port', port);
+        config.requestServerUpdate();
+    });
 }
 
 // Load SSL key and certificate
 var certLoc = path.resolve('./certs/cert.pem');
 var keyLoc = path.resolve('./certs/key.pem');
 
-if(!fs.existsSync('./certs/key.pem') || !fs.existsSync('./certs/key.pem')){
+if(!fs.existsSync(certLoc) || !fs.existsSync(keyLoc){
     pem.createCertificate({days: 360, selfSigned:true, keyBitsize :4096}, function(err, keys) {
-        fs.writeFileSync(keyLoc, keys.serviceKey);
-        fs.writeFileSync(certLoc, keys.certificate);
+        fs.writeFileSync(certLoc, keys.serviceKey);
+        fs.writeFileSync(keyLoc, keys.certificate);
 
-        startServer(keys.serviceKey, keys.certificate);
+        startServer(keyLoc, certLoc);
     });
 } else {
-    startServer(fs.readFileSync(keyLoc, 'utf8'), fs.readFileSync(certLoc, 'utf8'));
+    startServer(keyLoc, certLoc);
 }
+

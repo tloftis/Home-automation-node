@@ -14,17 +14,12 @@ var inputConfigLoc = path.normalize(rootDir + '/data/input-config.json'),
     idConfigLoc = path.normalize(rootDir + '/data/config.json');
 
 //TODO: remove the pincount concept, this will be made to run on any hardware with node and docker
-// and that hardward doesn't actually need to have pin hardware, its just legacy and this point
 var node = rootRequire('data/config.json', {}),
     logging = rootRequire('libs/logging.js'),
-    //proccessComm = rootRequire('libs/process-comm.js'),
     fs = require('fs'),
     async = require('async'),
-    os = require('os'),
     crypto = require('crypto'),
     request = require('request'),
-    chalk = require('chalk'),
-//    interfaces = os.networkInterfaces(),
     pinCount = (node.pinCount ? node.pinCount : 26),
     registeredPins = {};
 
@@ -47,17 +42,6 @@ var types = {
     object: typeof {},
     array: typeof []
 };
-
-//Keep this to know where this project started from, now it has a list of trusted certs and is fairly secure...ish
-//process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-
-//Something like this should be built into JS, maybe it is and I just don't read documentation enough
-// I like this functionality but it isn't needed so I will just comment it for now
-/*
-function objForEach(obj, funct){x
-    Object.keys(obj).forEach(function(key){ funct(obj[key]); });
-}
-*/
 
 //I use async very little, eventually I would like to remove it as a lib and just make my own version, only because I would enjoy it
 //So I just wrap this function with my own for now
@@ -142,7 +126,7 @@ function updateNode(newConfig){
     if(newConfig.location){
         node.location = newConfig.location;
     }
-    
+
     if (typeof newConfig.enableWebInterface === 'boolean') {
         node.enableWebInterface = newConfig.enableWebInterface;
     }
@@ -217,23 +201,14 @@ exports.alertInputChange = function(id, type, value){
     }
 
     asyncParallel(Object.keys(node.server), function (server, next){
-        var info = {
-            headers: {
-                'X-Token': node.server[server]
-            },
-            url: 'https://' + server + '/api/input/' + id,
-            form: { value: value, type: (type || typeof value) },
-            timeout: 10000,
-            ca: node.serverCerts,
-            checkServerIdentity: function(host, key){
-                //console.log(key.raw.toString());
-            }
-        };
+        var options = exports.getDefaultRequest(node.server[server]);
+        options.url = 'https://' + server + '/api/input/' + id;
+        options.form =  { value: value, type: (type || typeof value) };
 
-        request.post(info, function(err, resp, body){
+        request.post(options, function(err, resp, body){
             if(err){
-                return logging.error('Error updating server: ' + server + ' with input ' + id + '!', err);
-                //proccessComm.reconnect(); Not sure the purpose of this call, just going to comment it out and yolo
+                logging.error('Error updating server: ' + server + ' with input ' + id + '!', err);
+                return next();
             }
 
             if(resp.statusCode !== 200){
@@ -253,21 +228,11 @@ exports.alertInputChange = function(id, type, value){
 
 exports.requestServerUpdate = function(callback){
     asyncParallel(Object.keys(node.server), function (server, next){
-        var info = {
-            headers: {
-                'X-Token': node.server[server]
-            },
-            url: 'https://' + server + '/api/node',
-            form: { port: process.env.PORT || 2000},
-            timeout: 10000,
-            ca: node.serverCerts,
-            checkServerIdentity: function(host, key){
-                //console.log(key.raw.toString());
-            },
-            rejectUnhauthorized : true
-        };
+        var options = exports.getDefaultRequest(node.server[server]);
+        options.url = 'https://' + server + '/api/node';
+        options.form =  { port: process.env.PORT || 2000};
 
-        request.post(info, function(err, resp, body){
+        request.post(options, function(err, resp, body){
             if(err){
                 logging.error('Error talking to the server  "' + server || 'Unregistered' + '"!', err);
             } else if (resp.statusCode !== 200) {
@@ -283,6 +248,21 @@ exports.requestServerUpdate = function(callback){
             callback();
         }
     });
+};
+
+exports.getDefaultRequest = function(token) {
+    return {
+        headers: {
+            'X-TOKEN': token,
+            'X-NODE-ID': node.id
+        },
+        timeout: 10000,
+        ca: node.serverCerts,
+        checkServerIdentity: function(host, key){
+            //console.log(key.raw.toString());
+        },
+        rejectUnhauthorized : true
+    };
 };
 
 exports.saveCerts = function(certs){
